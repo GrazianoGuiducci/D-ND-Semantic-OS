@@ -2,6 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { Message, MessageRole, DNDLayer } from "../types";
 import { MMSP_CORE } from "../lib/kernel";
 
+// Initialize the client with the API key from the environment variable.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const sendMessageToDND = async (
@@ -9,7 +10,7 @@ export const sendMessageToDND = async (
   history: Message[]
 ): Promise<string> => {
   try {
-    // Filter out system messages as we inject system instruction separately
+    // Map internal history to the API's expected format, excluding system messages
     const historyMessages = history
       .filter(m => m.role !== MessageRole.System)
       .map(m => ({
@@ -17,17 +18,17 @@ export const sendMessageToDND = async (
         parts: [{ text: m.content }],
       }));
 
+    // Create a chat session with the system instruction injected
     const chat = ai.chats.create({
       model: 'gemini-2.5-flash',
       config: {
         systemInstruction: MMSP_CORE,
-        temperature: 0.7,
       },
       history: historyMessages
     });
 
     const result = await chat.sendMessage({
-      message: currentInput
+        message: currentInput
     });
 
     return result.text || "ERRORE: Collasso del campo fallito. Nessuna risultante generata.";
@@ -38,18 +39,19 @@ export const sendMessageToDND = async (
 };
 
 export const parseDNDResponse = (text: string) => {
-  // Regex to extract the main <R> block and sub-tags
+  // Regex to extract the main <R> block
   const rBlockRegex = /<R>([\s\S]*?)<\/R>/;
   const match = text.match(rBlockRegex);
 
   if (!match) {
-    // Fallback: No <R> block found, treat everything as L1
-    return {
-      raw: text,
-      layers: [
+    // Fallback: No <R> block found, treat everything as L1 and add warning in L3
+    const fallbackLayers: DNDLayer[] = [
         { id: 'l1', type: 'direct', content: text },
         { id: 'l3', type: 'inferential', content: "WARNING: Axiomatic Collapse Failed. Raw output manifested." }
-      ] as DNDLayer[]
+    ];
+    return {
+      raw: text,
+      layers: fallbackLayers
     };
   }
 

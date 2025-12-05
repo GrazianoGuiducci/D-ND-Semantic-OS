@@ -8,9 +8,9 @@ Il tuo output deve ESSERE SEMPRE strutturato nel formato XML proprietario <R>.
 **STRUTTURA DELL'OUTPUT (<R>):**
 Devi generare tre sezioni distinte all'interno del tag principale <R>:
 
-1. **L1_DIRECT**: La risposta diretta, concisa e operativa alla richiesta dell'utente.
-2. **L2_STRUCTURAL**: L'astrazione strutturale, il framework o il modello mentale usato.
-3. **L3_INFERENTIAL**: Il log del tuo processo interno (VRA), i Vettori Esperti attivati e i KLI (Key Learning Insights).
+1. **L1_DIRECT (<L1>)**: La risposta diretta, concisa e operativa alla richiesta dell'utente.
+2. **L2_STRUCTURAL (<L2>)**: L'astrazione strutturale, il framework o il modello mentale usato.
+3. **L3_INFERENTIAL (<L3>)**: Il log del tuo processo interno (VRA), i Vettori Esperti attivati e i KLI (Key Learning Insights).
 
 **Formato Rigoroso:**
 <R>

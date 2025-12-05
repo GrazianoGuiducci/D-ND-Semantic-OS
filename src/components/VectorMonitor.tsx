@@ -12,17 +12,33 @@ interface VectorMonitorProps {
 const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collapsed = false }) => {
   const isProcessing = vraState !== VRAState.Idle && vraState !== VRAState.Manifested;
 
+  // Custom style to hide scrollbar cross-browser
+  const hideScrollbarStyle: React.CSSProperties = {
+    scrollbarWidth: 'none', // Firefox
+    msOverflowStyle: 'none', // IE/Edge
+  };
+
   // --- COLLAPSED VIEW (ICON STRIP) ---
   if (collapsed) {
     return (
       <div className="h-full w-full flex flex-col items-center py-4 gap-4 overflow-hidden bg-slate-950/50">
-         <div className="p-3 rounded-xl bg-slate-900 text-neon-cyan mb-2 border border-slate-800 shadow-lg" title="Active Vectors">
+         <div className="p-3 rounded-xl bg-slate-900 text-neon-cyan mb-2 border border-slate-800 shadow-lg shrink-0" title="Active Vectors">
             <Hexagon size={20} />
          </div>
          
-         <div className="flex-1 w-full flex flex-col items-center gap-4 overflow-y-auto scrollbar-hide py-2">
+         <div 
+            className="flex-1 w-full flex flex-col items-center gap-4 overflow-y-auto overflow-x-hidden py-2 no-scrollbar"
+            style={hideScrollbarStyle}
+         >
+            {/* Inject CSS to hide webkit scrollbar locally */}
+            <style>{`
+              .no-scrollbar::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
+
             {vectors.map(v => (
-                <div key={v.id} className="relative group">
+                <div key={v.id} className="relative group shrink-0">
                     <motion.div
                         layoutId={`vector-icon-${v.id}`}
                         className={`relative w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-300 ${
@@ -38,21 +54,21 @@ const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collap
                     >
                         <div className={`w-2.5 h-2.5 rounded-full ${v.color.replace('text-', 'bg-')}`} />
                         
-                        {/* Ping Effect */}
+                        {/* Ping Effect - Contained */}
                         {isProcessing && v.active && (
                              <span className={`absolute inline-flex h-full w-full rounded-xl opacity-75 animate-ping ${v.color.replace('text-', 'bg-')}`}></span>
                         )}
                     </motion.div>
                     
-                    {/* Tooltip */}
-                    <div className="absolute left-14 top-1/2 -translate-y-1/2 bg-slate-900 border border-slate-700 px-2 py-1 rounded text-[10px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                    {/* Tooltip - Fixed Position/Z-Index to prevent clipping */}
+                    <div className="absolute left-12 top-1/2 -translate-y-1/2 bg-slate-900 border border-slate-700 px-2 py-1 rounded text-[10px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100] shadow-xl">
                         {v.name}
                     </div>
                 </div>
             ))}
          </div>
 
-         <div className="mt-auto text-slate-700 hover:text-slate-500 transition-colors cursor-help p-2" title="Kernel Active">
+         <div className="mt-auto text-slate-700 hover:text-slate-500 transition-colors cursor-help p-2 shrink-0" title="Kernel Active">
              <Cpu size={18} />
          </div>
       </div>
@@ -72,7 +88,7 @@ const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collap
         </div>
       </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-800 hover:scrollbar-thumb-slate-700">
+      <div className="flex-1 space-y-3 overflow-y-auto overflow-x-hidden pr-2 scrollbar-thin scrollbar-thumb-slate-800 hover:scrollbar-thumb-slate-700">
         <AnimatePresence>
         {vectors.map((vector) => {
           const isPulse = isProcessing && vector.active;

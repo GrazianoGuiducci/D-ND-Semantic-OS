@@ -6,6 +6,7 @@ export enum MessageRole {
 
 export enum VRAState {
   Idle = 'IDLE',
+  Input = 'HUMAN_INPUT',
   ResonanceScan = 'RESONANCE_SCAN',
   Weaving = 'WEAVING_VECTORS',
   Collapsing = 'FIELD_COLLAPSE',
@@ -37,11 +38,9 @@ export interface ExpertVector {
   category: 'analytic' | 'synthetic' | 'metacognitive';
 }
 
-export interface DNDContextState {
-  vraState: VRAState;
-  messages: Message[];
-  activeVectors: ExpertVector[];
-  addMessage: (msg: Message) => void;
-  setVRAState: (state: VRAState) => void;
-  toggleVector: (id: string) => void;
+export interface KLIItem {
+  id: string;
+  timestamp: number;
+  insight: string;
+  sourceId: string; // The ID of the message this KLI came from
 }

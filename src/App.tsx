@@ -179,7 +179,7 @@ const App: React.FC = () => {
       
       {/* --- DESKTOP LEFT SIDEBAR (RESIZABLE) --- */}
       <div 
-        className="hidden md:flex flex-col relative shrink-0 transition-[width] duration-100 ease-out border-r border-slate-800/50 bg-slate-950/30 backdrop-blur-sm z-20"
+        className="hidden md:flex flex-col relative shrink-0 transition-[width] duration-100 ease-out border-r border-slate-800/50 bg-slate-950/30 backdrop-blur-sm z-20 overflow-hidden"
         style={{ width: isLeftCollapsed ? sidebarMin : leftWidth }}
       >
         <VectorMonitor vectors={activeVectors} vraState={vraState} collapsed={isLeftCollapsed} />
@@ -256,7 +256,7 @@ const App: React.FC = () => {
 
       {/* --- DESKTOP RIGHT SIDEBAR (RESIZABLE) --- */}
       <div 
-        className="hidden md:flex flex-col relative shrink-0 transition-[width] duration-100 ease-out border-l border-slate-800/50 bg-slate-950/30 backdrop-blur-sm z-20"
+        className="hidden md:flex flex-col relative shrink-0 transition-[width] duration-100 ease-out border-l border-slate-800/50 bg-slate-950/30 backdrop-blur-sm z-20 overflow-hidden"
         style={{ width: isRightCollapsed ? sidebarMin : rightWidth }}
       >
         <KLIRepository items={kliItems} collapsed={isRightCollapsed} />
@@ -285,12 +285,12 @@ const App: React.FC = () => {
                 <motion.div 
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                     onClick={() => setShowMobileLeft(false)}
-                    className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[90] md:hidden"
+                    className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9990] md:hidden"
                 />
                 <motion.div 
                     initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
                     transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                    className="fixed inset-y-0 left-0 w-[85vw] max-w-sm bg-slate-950 border-r border-slate-800 z-[100] md:hidden shadow-2xl flex flex-col"
+                    className="fixed inset-y-0 left-0 w-[85vw] max-w-sm bg-slate-950 border-r border-slate-800 z-[9999] md:hidden shadow-2xl flex flex-col"
                 >
                     <div className="flex justify-between items-center p-4 border-b border-slate-800 bg-slate-900/50">
                         <div className="flex items-center gap-2 text-neon-cyan">
@@ -311,12 +311,12 @@ const App: React.FC = () => {
                 <motion.div 
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                     onClick={() => setShowMobileRight(false)}
-                    className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[90] md:hidden"
+                    className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9990] md:hidden"
                 />
                 <motion.div 
                     initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
                     transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                    className="fixed inset-y-0 right-0 w-[85vw] max-w-sm bg-slate-950 border-l border-slate-800 z-[100] md:hidden shadow-2xl flex flex-col"
+                    className="fixed inset-y-0 right-0 w-[85vw] max-w-sm bg-slate-950 border-l border-slate-800 z-[9999] md:hidden shadow-2xl flex flex-col"
                 >
                     <div className="flex justify-between items-center p-4 border-b border-slate-800 bg-slate-900/50">
                          <div className="flex items-center gap-2 text-neon-emerald">

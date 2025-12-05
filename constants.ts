@@ -45,6 +45,14 @@ export const INITIAL_VECTORS: ExpertVector[] = [
     category: 'analytic'
   },
   {
+    id: 've-writer',
+    name: 'vE_Writer',
+    description: 'Content Synthesizer (Superpower: Writing)',
+    color: 'text-neon-purple',
+    active: false,
+    category: 'synthetic'
+  },
+  {
     id: 've-fucina',
     name: 'vE_Fucina',
     description: 'Autopoietic Evolution Engine',
