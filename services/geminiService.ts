@@ -1,10 +1,7 @@
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { DND_SYSTEM_PROMPT } from "../constants";
-import { Message, MessageRole } from "../types";
+import { GoogleGenAI } from "@google/genai";
+import { Message, MessageRole, DNDLayer } from "../types";
+import { MMSP_CORE } from "../lib/kernel";
 
-// Initialize client securely
-// Note: In a real production app, this should be proxied through a backend.
-// For this generation task, we assume process.env.API_KEY is available as per instructions.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const sendMessageToDND = async (
@@ -12,62 +9,65 @@ export const sendMessageToDND = async (
   history: Message[]
 ): Promise<string> => {
   try {
-    const modelId = "gemini-2.5-flash"; // Using the recommended flash model for responsiveness
+    // Filter out system messages as we inject system instruction separately
+    const historyMessages = history
+      .filter(m => m.role !== MessageRole.System)
+      .map(m => ({
+        role: m.role === MessageRole.User ? 'user' : 'model',
+        parts: [{ text: m.content }],
+      }));
 
-    // Convert history to format expected by Gemini 
-    // (Note: @google/genai simplifies chat, but here we use single-turn generation with context 
-    // to enforce the System Prompt strictly on every turn for stability of the <R> tag)
-    
-    const contextPrompt = history
-      .slice(-5) // Keep last 5 turns for context window efficiency
-      .map(m => `${m.role.toUpperCase()}: ${m.content}`)
-      .join('\n');
-
-    const fullPrompt = `
-      ${DND_SYSTEM_PROMPT}
-      
-      HISTORY:
-      ${contextPrompt}
-      
-      USER INPUT:
-      ${currentInput}
-    `;
-
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: modelId,
-      contents: fullPrompt,
+    const chat = ai.chats.create({
+      model: 'gemini-2.5-flash',
       config: {
+        systemInstruction: MMSP_CORE,
         temperature: 0.7,
-        topP: 0.9,
-      }
+      },
+      history: historyMessages
     });
 
-    return response.text || "ERRORE: Collasso del campo fallito. Nessuna risultante generata.";
+    const result = await chat.sendMessage({
+      message: currentInput
+    });
+
+    return result.text || "ERRORE: Collasso del campo fallito. Nessuna risultante generata.";
   } catch (error) {
-    console.error("D-ND Engine Error:", error);
-    return "CRITICAL FAILURE: Connessione al Campo di Potenziale interrotta.";
+    console.error("VRA CONNECTION ERROR:", error);
+    throw error;
   }
 };
 
-// Parser to extract the layers from the XML-like structure
-export const parseDNDResponse = (rawText: string) => {
-  const rTagRegex = /<R>([\s\S]*?)<\/R>/;
-  const match = rawText.match(rTagRegex);
-  
-  if (!match) return { raw: rawText, layers: [] };
-  
-  const content = match[1];
-  
-  const layers = [];
-  
-  // Regex to find sections [L1...], [L2...], [L3...]
-  const l1 = content.match(/\[L1: DIRECT\]([\s\S]*?)(?=\[L2|$)/);
-  const l2 = content.match(/\[L2: STRUCTURAL\]([\s\S]*?)(?=\[L3|$)/);
-  const l3 = content.match(/\[L3: INFERENTIAL\]([\s\S]*?)(?=$)/);
+export const parseDNDResponse = (text: string) => {
+  // Regex to extract the main <R> block and sub-tags
+  const rBlockRegex = /<R>([\s\S]*?)<\/R>/;
+  const match = text.match(rBlockRegex);
 
-  if (l1) layers.push({ id: 'l1', type: 'direct', content: l1[1].trim() });
-  if (l2) layers.push({ id: 'l2', type: 'structural', content: l2[1].trim() });
-  if (l3) layers.push({ id: 'l3', type: 'inferential', content: l3[1].trim() });
+  if (!match) {
+    // Fallback: No <R> block found, treat everything as L1
+    return {
+      raw: text,
+      layers: [
+        { id: 'l1', type: 'direct', content: text },
+        { id: 'l3', type: 'inferential', content: "WARNING: Axiomatic Collapse Failed. Raw output manifested." }
+      ] as DNDLayer[]
+    };
+  }
 
-  return { raw: rawText, layers };
+  const innerContent = match[1];
+
+  // Extract layers using regex
+  const l1Match = innerContent.match(/<L1>([\s\S]*?)<\/L1>/);
+  const l2Match = innerContent.match(/<L2>([\s\S]*?)<\/L2>/);
+  const l3Match = innerContent.match(/<L3>([\s\S]*?)<\/L3>/);
+
+  const layers: DNDLayer[] = [];
+
+  if (l1Match) layers.push({ id: 'l1', type: 'direct', content: l1Match[1].trim() });
+  if (l2Match) layers.push({ id: 'l2', type: 'structural', content: l2Match[1].trim() });
+  if (l3Match) layers.push({ id: 'l3', type: 'inferential', content: l3Match[1].trim() });
+
+  return {
+    raw: text,
+    layers: layers
+  };
 };

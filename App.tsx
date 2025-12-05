@@ -42,7 +42,7 @@ const App: React.FC = () => {
       setVraState(VRAState.Weaving);
       
       // Activate specific vectors for visual effect (randomly for demo)
-      const weavingVectors = activeVectors.map(v => ({...v, active: true}));
+      const weavingVectors = activeVectors.map(v => ({...v, active: Math.random() > 0.5}));
       setActiveVectors(weavingVectors);
       
     }, 1500);
@@ -63,7 +63,7 @@ const App: React.FC = () => {
             id: (Date.now() + 1).toString(),
             role: MessageRole.Assistant,
             content: parsed.raw,
-            layers: parsed.layers as any,
+            layers: parsed.layers,
             timestamp: Date.now()
           };
 
@@ -84,7 +84,7 @@ const App: React.FC = () => {
       const errorMsg: Message = {
         id: Date.now().toString(),
         role: MessageRole.System,
-        content: "CRITICAL ERROR IN VRA CORE.",
+        content: "CRITICAL ERROR IN VRA CORE: " + (error instanceof Error ? error.message : "Unknown error"),
         timestamp: Date.now()
       };
       setMessages(prev => [...prev, errorMsg]);

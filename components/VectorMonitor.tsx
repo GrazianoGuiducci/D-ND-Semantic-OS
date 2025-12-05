@@ -60,6 +60,9 @@ const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState }) => {
           <Cpu className="w-4 h-4 text-slate-600" />
           <span className="text-[10px] font-mono text-slate-600">KERNEL: SACS-PS v14.0</span>
         </div>
+        <div className="text-[9px] text-slate-700 font-mono mt-1">
+          OBRA SUPERPOWERS INTEGRATED
+        </div>
       </div>
     </div>
   );

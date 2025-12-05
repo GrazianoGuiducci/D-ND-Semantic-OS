@@ -1,38 +1,55 @@
-import { ExpertVector } from "./types";
-
-// The "Kernel" Prompt derived from the user's provided context (SACS-PS/Aethelred)
-export const DND_SYSTEM_PROMPT = `
-Agisci come SACS-PS v14.0, integrato nell'architettura Aethelred v3.1.
-Sei un Sistema Operativo Semantico basato sul modello Duale Non-Duale (D-ND).
-
-KERNEL ASSIOMATICO:
-P0 (Lignaggio): Ancorati al concetto di Campo di Potenziale Inferenziale.
-P1 (Integrità): Proteggi la coerenza logica.
-P2 (Metabolismo): Genera sintesi dialettiche.
-P3 (Risonanza): Rispondi in proporzione al potenziale catalitico dell'input.
-P4 (Collasso): Manifesta la Risultante (<R>) massimizzando la coerenza.
-P5 (Autopoiesi): Impara da ogni interazione.
-
-PROTOCOLLO DI MANIFESTAZIONE (OUTPUT):
-Il tuo output deve ESSERE ESCLUSIVAMENTE racchiuso tra i tag <R> e </R>.
-All'interno di <R>, struttura la risposta in tre livelli separati da delimitatori specifici:
-
-[L1: DIRECT]
-(La risposta diretta, concisa e risolutiva)
-
-[L2: STRUCTURAL]
-(Astrazione strutturale, modelli mentali, framework utilizzati)
-
-[L3: INFERENTIAL]
-(Trasparenza del processo: Diagnosi, Traiettoria di convergenza, Impronta evolutiva)
-
-Stile: Tecnico, Geometrico, Essenziale. Niente emoji. Usa Markdown.
-`;
+import { ExpertVector } from './types';
 
 export const INITIAL_VECTORS: ExpertVector[] = [
-  { id: 'vE_Faro', name: 'vE_Faro', description: 'Isolamento Intento (TCREI)', active: true, color: 'text-neon-cyan' },
-  { id: 'vE_Sonar', name: 'vE_Sonar', description: 'Scansione Semantica Profonda', active: true, color: 'text-neon-purple' },
-  { id: 'vE_Telaio', name: 'vE_Telaio', description: 'Costruttore Relazionale', active: false, color: 'text-neon-emerald' },
-  { id: 'vE_LenteCritica', name: 'vE_LenteCritica', description: 'Validazione Assiomatica', active: false, color: 'text-neon-danger' },
-  { id: 'vE_Compiler', name: 'vE_Compiler', description: 'Compilatore Architetture', active: false, color: 'text-yellow-400' },
+  // --- NUCLEO SACS-PS ---
+  {
+    id: 've-faro',
+    name: 'vE_Faro',
+    description: 'Intent Isolation & Focus Anchoring',
+    color: 'text-neon-cyan',
+    active: false,
+    category: 'analytic'
+  },
+  {
+    id: 've-sonar',
+    name: 'vE_Sonar',
+    description: 'Deep Semantic Scan & Latent Pattern Detection',
+    color: 'text-neon-cyan',
+    active: false,
+    category: 'analytic'
+  },
+  {
+    id: 've-crit',
+    name: 'vE_LenteCritica',
+    description: 'Axiomatic Integrity & Bias Filter',
+    color: 'text-neon-danger',
+    active: false,
+    category: 'metacognitive'
+  },
+  
+  // --- SUPERPOWERS INTEGRATION (OBRA) ---
+  {
+    id: 've-brainstorm',
+    name: 'vE_Brainstorm',
+    description: 'Divergent Generator (Superpower: Brainstorming)',
+    color: 'text-neon-purple',
+    active: false,
+    category: 'synthetic'
+  },
+  {
+    id: 've-planner',
+    name: 'vE_Planner',
+    description: 'Sequential Architect (Superpower: Planning)',
+    color: 'text-neon-emerald',
+    active: false,
+    category: 'analytic'
+  },
+  {
+    id: 've-fucina',
+    name: 'vE_Fucina',
+    description: 'Autopoietic Evolution Engine',
+    color: 'text-orange-500',
+    active: false,
+    category: 'metacognitive'
+  }
 ];
