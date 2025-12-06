@@ -11,26 +11,56 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const sendMessageToDND = async (
   currentInput: string,
-  history: Message[]
+  history: Message[],
+  imageBase64?: string // Optional image data
 ): Promise<string> => {
   try {
+    // 1. Prepare History (Text Only for context window efficiency, or full if needed)
+    // Note: Gemini supports multi-modal history, but for cost/token optimization 
+    // we often strip images from far history unless essential. 
+    // Here we pass text history.
     const historyMessages = history
       .filter(m => m.role !== MessageRole.System)
-      .map(m => ({
-        role: m.role === MessageRole.User ? 'user' : 'model',
-        parts: [{ text: m.content }],
-      }));
+      .map(m => {
+        // If a past message had an image, we ideally shouldn't re-send the base64 every time to save bandwidth/tokens
+        // unless strictly necessary. For V1 implementation, we keep text context.
+        return {
+            role: m.role === MessageRole.User ? 'user' : 'model',
+            parts: [{ text: m.content }],
+        };
+      });
 
+    // 2. Prepare Current Message Payload
+    let parts: any[] = [{ text: currentInput }];
+    
+    if (imageBase64) {
+        // Remove header if present (e.g., "data:image/jpeg;base64,")
+        const base64Data = imageBase64.split(',')[1] || imageBase64;
+        parts.push({
+            inlineData: {
+                mimeType: 'image/jpeg',
+                data: base64Data
+            }
+        });
+    }
+
+    // 3. Create Session
     const chat = ai.chats.create({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-flash', // Flash supports Vision + Text
       config: {
         systemInstruction: MMSP_CORE,
       },
       history: historyMessages
     });
 
+    // 4. Send
+    // Note: The SDK chat.sendMessage typically takes a string or parts. 
+    // We construct the message object explicitly.
     const result = await chat.sendMessage({
-        message: currentInput
+        message: {
+            role: 'user',
+            parts: parts
+        }
     });
 
     return result.text || "ERRORE: Collasso del campo fallito. Nessuna risultante generata.";

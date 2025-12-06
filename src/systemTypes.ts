@@ -22,11 +22,18 @@ export interface DNDLayer {
   content: string;
 }
 
+export interface MessageAttachment {
+  type: 'image';
+  mimeType: string;
+  data: string; // Base64
+}
+
 export interface Message {
   id: string;
   role: MessageRole;
   content: string; // Raw content or fallback
   layers?: DNDLayer[]; // The structured D-ND output
+  attachment?: MessageAttachment; // Visual data
   timestamp: number;
 }
 

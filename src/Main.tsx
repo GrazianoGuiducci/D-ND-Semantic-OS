@@ -12,10 +12,12 @@ import VectorMonitor from './components/VectorMonitor';
 import KLIRepository from './components/KLIRepository';
 import AmbientPulse from './components/AmbientPulse';
 import Guide from './Guide'; 
-import { Cpu, Menu, Database, X, BookOpen, Trash2 } from 'lucide-react';
+import QuantumField from './components/QuantumField';
+import SystemOnboarding from './components/SystemOnboarding';
+import { Cpu, Menu, Database, X, BookOpen, Trash2, ShieldAlert, Power, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-console.log("D-ND OS :: MAIN LINK ESTABLISHED [CLEAN v4.3 - UX REFACTOR]");
+console.log("D-ND OS :: MAIN LINK ESTABLISHED [CLEAN v5.1 - PHYSICS GRID]");
 
 const DEFAULT_INIT_MESSAGE: Message = {
     id: 'init-1',
@@ -29,11 +31,15 @@ const DEFAULT_INIT_MESSAGE: Message = {
 };
 
 const Main: React.FC = () => {
-  // --- STATE INITIALIZATION WITH MEMORY CHECK ---
+  // --- STATE ---
+  const [bootSequence, setBootSequence] = useState(true);
+  const [showPurgeModal, setShowPurgeModal] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // --- MEMORY LOAD ---
   const [messages, setMessages] = useState<Message[]>(() => {
       const memory = loadMemory();
       if (memory && memory.messages.length > 0) {
-          // Inject a meta-message indicating restoration
           const restoreMsg: Message = {
               id: `restore-${Date.now()}`,
               role: MessageRole.System,
@@ -41,7 +47,6 @@ const Main: React.FC = () => {
               timestamp: Date.now(),
               layers: []
           };
-          // Don't duplicate if already restored recently? Naive check.
           return [...memory.messages, restoreMsg];
       }
       return [DEFAULT_INIT_MESSAGE];
@@ -52,10 +57,32 @@ const Main: React.FC = () => {
       return memory ? memory.kliItems : [];
   });
 
+  // --- BOOT EFFECT & ONBOARDING CHECK ---
+  useEffect(() => {
+    // Fake boot delay
+    const timer = setTimeout(() => {
+        setBootSequence(false);
+        
+        // Check if user has seen onboarding
+        const hasSeenOnboarding = localStorage.getItem('DND_ONBOARDING_COMPLETED');
+        if (!hasSeenOnboarding) {
+            setTimeout(() => setShowOnboarding(true), 1000);
+        }
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const completeOnboarding = () => {
+      setShowOnboarding(false);
+      localStorage.setItem('DND_ONBOARDING_COMPLETED', 'true');
+  };
+
   // --- PERSISTENCE HOOK ---
   useEffect(() => {
-      saveMemory(messages, kliItems);
-  }, [messages, kliItems]);
+      if (!bootSequence) {
+        saveMemory(messages, kliItems);
+      }
+  }, [messages, kliItems, bootSequence]);
 
   const [vraState, setVraState] = useState<VRAState>(VRAState.Idle);
   const [activeVectors, setActiveVectors] = useState<ExpertVector[]>(INITIAL_VECTORS);
@@ -82,15 +109,16 @@ const Main: React.FC = () => {
   };
 
   // --- SYSTEM PURGE ---
-  const handleSystemPurge = () => {
-      if (window.confirm("WARNING: INITIATING SYSTEM PURGE.\n\nThis will wipe all Axiomatic RAM (Chat History & KLI). Are you sure?")) {
-          clearMemory();
-          setMessages([DEFAULT_INIT_MESSAGE]);
-          setKliItems([]);
-          setVraState(VRAState.Idle);
-          // Visual feedback
-          alert("SYSTEM MEMORY PURGED.");
-      }
+  const confirmSystemPurge = () => {
+      clearMemory();
+      setMessages([DEFAULT_INIT_MESSAGE]);
+      setKliItems([]);
+      setVraState(VRAState.Idle);
+      setShowPurgeModal(false);
+      // Optional: re-trigger boot
+      setBootSequence(true);
+      setTimeout(() => setBootSequence(false), 1500);
+      localStorage.removeItem('DND_ONBOARDING_COMPLETED'); // Reset onboarding too
   };
 
   const [leftWidth, setLeftWidth] = useState(260);
@@ -152,16 +180,25 @@ const Main: React.FC = () => {
     };
   }, [handleResize, stopResize]);
 
-  const handleSendMessage = async (text: string, overrideVectorName?: string) => {
+  // --- UPDATED MESSAGE HANDLER (MULTI-MODAL) ---
+  const handleSendMessage = async (text: string, overrideVectorName?: string, imageBase64?: string) => {
     updateInteraction();
+    
+    // Construct final text content (Override + Text)
     const finalContent = overrideVectorName 
         ? `[OVERRIDE_VECTOR: ${overrideVectorName}] ${text}` 
         : text;
 
+    // Create User Message (with optional attachment)
     const userMsg: Message = {
       id: Date.now().toString(),
       role: MessageRole.User,
-      content: text,
+      content: text || (imageBase64 ? "[Visual Data Transmission]" : ""),
+      attachment: imageBase64 ? {
+          type: 'image',
+          mimeType: 'image/jpeg',
+          data: imageBase64
+      } : undefined,
       timestamp: Date.now()
     };
     setMessages(prev => [...prev, userMsg]);
@@ -178,7 +215,12 @@ const Main: React.FC = () => {
     }, 1200);
 
     try {
-      const responseText = await sendMessageToDND(finalContent, [...messages, { ...userMsg, content: finalContent }]);
+      // PASS IMAGE DATA TO SERVICE
+      const responseText = await sendMessageToDND(
+          finalContent, 
+          [...messages, { ...userMsg, content: finalContent }],
+          imageBase64
+      );
 
       setVraState(VRAState.Collapsing);
       
@@ -228,17 +270,40 @@ const Main: React.FC = () => {
     }
   };
 
+  // --- RENDER BOOT SCREEN ---
+  if (bootSequence) {
+      return (
+          <div className="fixed inset-0 bg-void text-neon-cyan font-mono flex flex-col items-center justify-center z-[9999]">
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="flex flex-col items-center gap-4"
+              >
+                  <div className="w-16 h-16 rounded-full border-4 border-neon-cyan border-t-transparent animate-spin" />
+                  <h1 className="text-2xl font-bold tracking-widest">D-ND OS</h1>
+                  <div className="flex flex-col items-center text-xs text-slate-500 gap-1">
+                      <motion.span animate={{ opacity: [0, 1] }} transition={{ delay: 0.2 }}>INITIALIZING VRA CORE...</motion.span>
+                      <motion.span animate={{ opacity: [0, 1] }} transition={{ delay: 0.5 }}>SYNCING AXIOMATIC MEMORY...</motion.span>
+                      <motion.span animate={{ opacity: [0, 1] }} transition={{ delay: 0.8 }}>ESTABLISHING NEURAL LINK...</motion.span>
+                  </div>
+              </motion.div>
+          </div>
+      );
+  }
+
   return (
     <div 
-      className="flex h-[100dvh] w-screen bg-void text-slate-200 overflow-hidden font-sans selection:bg-neon-cyan/30 selection:text-neon-cyan"
+      className="relative flex h-[100dvh] w-full bg-void text-slate-100 overflow-hidden font-sans selection:bg-neon-cyan/30 selection:text-neon-cyan"
       onMouseMove={updateInteraction}
       onClick={updateInteraction}
       onKeyPress={updateInteraction}
     >
       
-      {/* --- DESKTOP LEFT SIDEBAR (RESIZABLE) --- */}
+      {/* --- DESKTOP LEFT SIDEBAR --- */}
       <div 
-        className="hidden md:flex flex-col relative shrink-0 transition-[width] duration-100 ease-out border-r border-slate-800/50 bg-slate-950/30 backdrop-blur-sm z-20 overflow-hidden"
+        id="tour-vectors"
+        className="hidden md:flex flex-col relative shrink-0 transition-[width] duration-100 ease-out border-r border-slate-700 bg-slate-950/90 z-20 overflow-hidden"
         style={{ width: isLeftCollapsed ? sidebarMin : leftWidth }}
       >
         <VectorMonitor 
@@ -249,24 +314,28 @@ const Main: React.FC = () => {
             onToggle={() => setIsLeftCollapsed(!isLeftCollapsed)}
         />
         
-        {/* Resize Handle */}
         <div 
-            className="absolute -right-1 top-0 bottom-0 w-3 cursor-col-resize hover:bg-neon-cyan/10 z-30 flex items-center justify-center group opacity-0 hover:opacity-100 transition-opacity"
+            className="absolute -right-1 top-0 bottom-0 w-3 cursor-col-resize hover:bg-neon-cyan/20 z-30 flex items-center justify-center group opacity-0 hover:opacity-100 transition-opacity"
             onMouseDown={() => startResize('left')}
         >
-            <div className="w-[1px] h-8 bg-neon-cyan/50 group-hover:h-full transition-all duration-300" />
+            <div className="w-[2px] h-8 bg-neon-cyan group-hover:h-full transition-all duration-300 shadow-[0_0_5px_#22d3ee]" />
         </div>
       </div>
 
-      {/* --- MAIN CONTENT AREA --- */}
-      <div className="flex-1 flex flex-col relative min-w-0 z-10 bg-slate-950/20 overflow-hidden">
+      {/* --- MAIN CONTENT --- */}
+      <div className="flex-1 flex flex-col relative min-w-0 z-10 bg-slate-950/50 overflow-hidden">
         
-        <div className="h-40 shrink-0 border-b border-slate-800 bg-[url('https://picsum.photos/seed/nebula/1200/400')] bg-cover bg-center relative flex items-center justify-center shadow-2xl shadow-black/50 z-20">
-           <div className="absolute inset-0 bg-void/85 backdrop-blur-[2px]"></div>
+        {/* HEADER WITH QUANTUM FIELD */}
+        <div className="h-40 shrink-0 border-b border-slate-700 relative flex items-center justify-center shadow-2xl shadow-black/80 z-20 bg-void overflow-hidden">
+           
+           {/* REACTIVE QUANTUM FIELD */}
+           <QuantumField vraState={vraState} />
+           
+           <div className="absolute inset-0 bg-void/30 backdrop-blur-[1px]"></div>
            
            {/* Mobile Toggles */}
            <div className="absolute top-4 left-4 md:hidden z-50">
-                <button onClick={() => setShowMobileLeft(true)} className="p-2.5 bg-slate-900/90 rounded-lg border border-slate-700 text-neon-cyan shadow-lg active:scale-95 transition-transform">
+                <button onClick={() => setShowMobileLeft(true)} className="p-2.5 bg-slate-900/90 rounded-lg border border-slate-600 text-neon-cyan shadow-lg active:scale-95 transition-transform">
                     <Menu size={20} />
                 </button>
            </div>
@@ -274,31 +343,42 @@ const Main: React.FC = () => {
            <div className="absolute bottom-4 right-4 md:hidden z-50">
                 <button 
                   onClick={() => handleOpenDocs()}
-                  className="p-2.5 bg-slate-900/90 rounded-full border border-slate-700 text-slate-300 shadow-lg active:scale-95 transition-transform"
+                  className="p-2.5 bg-slate-900/90 rounded-full border border-slate-600 text-slate-200 shadow-lg active:scale-95 transition-transform"
                 >
                     <BookOpen size={18} />
                 </button>
            </div>
 
            <div className="absolute top-4 right-4 md:hidden z-50">
-                <button onClick={() => setShowMobileRight(true)} className="p-2.5 bg-slate-900/90 rounded-lg border border-slate-700 text-neon-emerald shadow-lg active:scale-95 transition-transform relative">
+                <button onClick={() => setShowMobileRight(true)} className="p-2.5 bg-slate-900/90 rounded-lg border border-slate-600 text-neon-emerald shadow-lg active:scale-95 transition-transform relative">
                     <Database size={20} />
                     {kliItems.length > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-neon-emerald rounded-full border-2 border-slate-900 animate-pulse" />}
                 </button>
            </div>
 
-           <VRAVisualizer state={vraState} />
+           <div id="tour-vra" className="z-10 relative">
+               <VRAVisualizer state={vraState} />
+           </div>
            
-           <div className="hidden md:flex absolute top-4 left-4 items-center gap-4">
-              <h1 className="text-xl font-bold font-mono tracking-tighter text-white flex items-center gap-2">
-                 <Cpu className="text-neon-cyan" /> D-ND OS
+           <div className="hidden md:flex absolute top-4 left-4 items-center gap-4 z-50">
+              <h1 className="text-2xl font-bold font-mono tracking-tighter text-white flex items-center gap-2 drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">
+                 <Cpu className="text-neon-cyan" size={24} /> D-ND OS
               </h1>
            </div>
 
-           <div className="hidden md:flex absolute top-4 right-4 items-center gap-3">
+           <div className="hidden md:flex absolute top-4 right-4 items-center gap-3 z-50">
               <button
-                onClick={handleSystemPurge}
-                className="flex items-center gap-2 px-3 py-1.5 bg-red-950/30 border border-red-900/50 rounded-lg text-xs font-mono text-red-400 hover:text-red-200 hover:border-red-500 hover:bg-red-900/50 transition-all group shadow-lg z-50"
+                onClick={() => setShowOnboarding(true)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/50 border border-slate-600 rounded-lg text-xs font-mono text-slate-400 hover:text-white hover:border-white transition-all group shadow-lg"
+                title="Re-Calibrate (Tour)"
+              >
+                  <HelpCircle size={14} />
+                  <span className="hidden lg:inline group-hover:tracking-wider transition-all">HELP</span>
+              </button>
+
+              <button
+                onClick={() => setShowPurgeModal(true)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-red-950/30 border border-red-900/50 rounded-lg text-xs font-mono text-red-400 hover:text-red-200 hover:border-red-500 hover:bg-red-900/50 transition-all group shadow-lg"
                 title="Purge System Memory"
               >
                   <Trash2 size={14} />
@@ -307,7 +387,7 @@ const Main: React.FC = () => {
 
               <button 
                 onClick={() => handleOpenDocs()}
-                className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/50 border border-slate-700 rounded-lg text-xs font-mono text-slate-400 hover:text-neon-cyan hover:border-neon-cyan transition-all group shadow-lg z-50"
+                className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/50 border border-slate-700 rounded-lg text-xs font-mono text-slate-400 hover:text-neon-cyan hover:border-neon-cyan transition-all group shadow-lg"
               >
                   <BookOpen size={14} />
                   <span className="group-hover:tracking-wider transition-all">ARCHIVES</span>
@@ -315,7 +395,7 @@ const Main: React.FC = () => {
            </div>
         </div>
 
-        <div className="flex-1 flex overflow-hidden relative">
+        <div id="tour-console" className="flex-1 flex overflow-hidden relative">
             <HolographicConsole messages={messages} vraState={vraState} />
             
             <AmbientPulse 
@@ -325,21 +405,24 @@ const Main: React.FC = () => {
             />
         </div>
 
-        <InputMatrix 
-            onSend={handleSendMessage} 
-            disabled={vraState !== VRAState.Idle && vraState !== VRAState.Manifested && vraState !== VRAState.Input} 
-            vectors={INITIAL_VECTORS}
-            onFocus={() => {
-                updateInteraction();
-                setVraState(VRAState.Input);
-            }}
-            onBlur={() => setVraState(prev => prev === VRAState.Input ? VRAState.Idle : prev)}
-            onOpenDocs={() => handleOpenDocs('guide-01')}
-        />
+        <div id="tour-input">
+            <InputMatrix 
+                onSend={handleSendMessage} 
+                disabled={vraState !== VRAState.Idle && vraState !== VRAState.Manifested && vraState !== VRAState.Input} 
+                vectors={INITIAL_VECTORS}
+                onFocus={() => {
+                    updateInteraction();
+                    setVraState(VRAState.Input);
+                }}
+                onBlur={() => setVraState(prev => prev === VRAState.Input ? VRAState.Idle : prev)}
+                onOpenDocs={() => handleOpenDocs('guide-01')}
+            />
+        </div>
       </div>
 
-      {/* --- DESKTOP RIGHT SIDEBAR (RESIZABLE) --- */}
+      {/* --- DESKTOP RIGHT SIDEBAR --- */}
       <div 
+        id="tour-kli"
         className="hidden md:flex flex-col relative shrink-0 transition-[width] duration-100 ease-out border-l border-slate-800/50 bg-slate-950/30 backdrop-blur-sm z-20 overflow-hidden"
         style={{ width: isRightCollapsed ? sidebarMin : rightWidth }}
       >
@@ -356,6 +439,58 @@ const Main: React.FC = () => {
              <div className="w-[1px] h-8 bg-neon-emerald/50 group-hover:h-full transition-all duration-300" />
         </div>
       </div>
+
+      {/* --- MODALS --- */}
+      <AnimatePresence>
+          {showPurgeModal && (
+              <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/90 backdrop-blur-sm">
+                  <motion.div 
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                    className="w-full max-w-md bg-slate-950 border-2 border-red-600/50 rounded-xl p-6 shadow-[0_0_50px_rgba(220,38,38,0.2)] flex flex-col gap-4"
+                  >
+                      <div className="flex items-center gap-3 text-red-500 border-b border-red-900/50 pb-4">
+                          <ShieldAlert size={32} />
+                          <h2 className="text-xl font-mono font-bold tracking-widest">SYSTEM PURGE</h2>
+                      </div>
+                      
+                      <div className="space-y-2 text-slate-300 font-mono text-sm leading-relaxed">
+                          <p>WARNING: You are about to initiate a full memory wipe.</p>
+                          <ul className="list-disc pl-5 text-red-400">
+                              <li>All Chat Logs will be deleted.</li>
+                              <li>Autopoietic RAM (KLI) will be formatted.</li>
+                              <li>Axiomatic Weights will reset to default.</li>
+                          </ul>
+                          <p className="mt-2 font-bold">This action cannot be undone.</p>
+                      </div>
+
+                      <div className="flex gap-3 mt-4 pt-4 border-t border-slate-900">
+                          <button 
+                            onClick={() => setShowPurgeModal(false)}
+                            className="flex-1 px-4 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono transition-colors"
+                          >
+                              CANCEL
+                          </button>
+                          <button 
+                            onClick={confirmSystemPurge}
+                            className="flex-1 px-4 py-3 rounded-lg bg-red-900/80 hover:bg-red-700 text-white font-mono font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-red-900/20"
+                          >
+                              <Power size={16} /> CONFIRM WIPE
+                          </button>
+                      </div>
+                  </motion.div>
+              </div>
+          )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isGuideOpen && <Guide isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} initialDocId={activeDocId} />}
+      </AnimatePresence>
+      
+      <AnimatePresence>
+          {showOnboarding && <SystemOnboarding onComplete={completeOnboarding} />}
+      </AnimatePresence>
 
       {/* --- MOBILE DRAWERS --- */}
       <AnimatePresence>
@@ -379,7 +514,6 @@ const Main: React.FC = () => {
                         <button onClick={() => setShowMobileLeft(false)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-colors"><X size={20} /></button>
                     </div>
                     <div className="flex-1 overflow-hidden">
-                       {/* Optional toggle for mobile if needed, though usually drawer closes */}
                        <VectorMonitor vectors={activeVectors} vraState={vraState} onOpenDocs={() => { setShowMobileLeft(false); handleOpenDocs('vec-01'); }} />
                     </div>
                 </motion.div>
@@ -411,10 +545,6 @@ const Main: React.FC = () => {
                 </motion.div>
             </>
         )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isGuideOpen && <Guide isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} initialDocId={activeDocId} />}
       </AnimatePresence>
 
       {isDragging && (

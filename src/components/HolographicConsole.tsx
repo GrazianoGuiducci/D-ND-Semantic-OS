@@ -1,7 +1,8 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Message, MessageRole, VRAState, DNDLayer } from '../systemTypes';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, Layers, Box, User, Cpu } from 'lucide-react';
+import { Terminal, Layers, Box, User, Cpu, Image as ImageIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface HolographicConsoleProps {
@@ -20,7 +21,7 @@ const HolographicConsole: React.FC<HolographicConsoleProps> = ({ messages, vraSt
 
   return (
     <div className="flex-1 relative flex flex-col overflow-hidden bg-slate-950/90 backdrop-blur-md">
-      {/* Scanlines Effect - Reduced opacity for better text readability */}
+      {/* Scanlines Effect */}
       <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-[1] bg-[length:100%_2px,3px_100%] opacity-10"></div>
 
       {/* Header */}
@@ -55,6 +56,17 @@ const HolographicConsole: React.FC<HolographicConsoleProps> = ({ messages, vraSt
             {/* Content Bubble */}
             <div className={`flex flex-col max-w-[85%] ${msg.role === MessageRole.User ? 'items-end' : 'items-start'}`}>
               
+              {/* IMAGE ATTACHMENT DISPLAY */}
+              {msg.attachment && (
+                  <div className={`mb-2 p-1 rounded-lg border border-slate-700 bg-slate-900/80 shadow-lg overflow-hidden ${msg.role === MessageRole.User ? 'ml-auto' : ''}`}>
+                      <img src={msg.attachment.data} alt="Visual Data" className="max-w-[200px] max-h-[200px] rounded-md object-cover" />
+                      <div className="flex items-center gap-1 mt-1 px-1">
+                          <ImageIcon size={10} className="text-neon-cyan" />
+                          <span className="text-[9px] font-mono text-neon-cyan uppercase tracking-wider">Visual Data Shard</span>
+                      </div>
+                  </div>
+              )}
+
               {msg.role === MessageRole.User ? (
                 // User Message
                 <div className="bg-slate-800 border border-slate-600 rounded-xl p-3.5 text-sm text-white font-sans font-medium shadow-xl tracking-wide leading-relaxed">
@@ -119,10 +131,9 @@ const LayerBlock: React.FC<{ layer: DNDLayer, index: number, isLastMessage: bool
   const [expanded, setExpanded] = React.useState(true);
   const [displayedContent, setDisplayedContent] = React.useState("");
   
-  // Sequencing constants
-  const TYPE_SPEED = 5; // ms per char for L1
-  const DELAY_L2 = 0.5; // seconds
-  const DELAY_L3 = 1.0; // seconds
+  const TYPE_SPEED = 5; 
+  const DELAY_L2 = 0.5; 
+  const DELAY_L3 = 1.0; 
 
   useEffect(() => {
     if (layer.type === 'direct' && isLastMessage) {
@@ -147,7 +158,6 @@ const LayerBlock: React.FC<{ layer: DNDLayer, index: number, isLastMessage: bool
 
   const entranceDelay = layer.type === 'direct' ? 0 : layer.type === 'structural' ? DELAY_L2 : DELAY_L3;
 
-  // Styling - High Contrast
   const config = {
     direct: {
       color: 'border-neon-cyan',
