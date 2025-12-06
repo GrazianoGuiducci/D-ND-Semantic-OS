@@ -20,10 +20,10 @@
             colors: {
               void: '#020617',
               neon: {
-                cyan: '#06b6d4',
-                purple: '#8b5cf6',
-                emerald: '#10b981',
-                danger: '#f43f5e'
+                cyan: '#22d3ee', // Brighter Cyan (was #06b6d4)
+                purple: '#a78bfa', // Brighter Purple (was #8b5cf6)
+                emerald: '#34d399', // Brighter Emerald (was #10b981)
+                danger: '#fb7185'  // Brighter Red (was #f43f5e)
               }
             },
             animation: {
@@ -37,21 +37,21 @@
     <style>
       body {
         background-color: #020617;
-        color: #e2e8f0;
+        color: #f8fafc; /* Slate-50 instead of Slate-200 */
       }
-      /* Custom Scrollbar for Terminal Feel */
+      /* Custom Scrollbar for Terminal Feel - High Contrast */
       ::-webkit-scrollbar {
         width: 6px;
       }
       ::-webkit-scrollbar-track {
-        background: #0f172a; 
+        background: #020617; 
       }
       ::-webkit-scrollbar-thumb {
-        background: #1e293b; 
+        background: #475569; /* Lighter thumb */
         border-radius: 3px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #334155; 
+        background: #64748b; 
       }
 
       /* Utility: Hide Scrollbar but keep functionality */

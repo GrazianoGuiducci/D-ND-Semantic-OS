@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 // STRICT RELATIVE IMPORTS
 import { Message, MessageRole, VRAState, ExpertVector, KLIItem } from './systemTypes';
@@ -12,10 +11,10 @@ import VectorMonitor from './components/VectorMonitor';
 import KLIRepository from './components/KLIRepository';
 import AmbientPulse from './components/AmbientPulse';
 import Guide from './Guide'; 
-import { Cpu, Menu, Database, X, PanelLeftClose, PanelRightClose, BookOpen, Trash2 } from 'lucide-react';
+import { Cpu, Menu, Database, X, BookOpen, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-console.log("D-ND OS :: MAIN LINK ESTABLISHED [CLEAN v4.2 - VISUAL PATCH]");
+console.log("D-ND OS :: MAIN LINK ESTABLISHED [CLEAN v4.3 - UX REFACTOR]");
 
 const DEFAULT_INIT_MESSAGE: Message = {
     id: 'init-1',
@@ -41,6 +40,7 @@ const Main: React.FC = () => {
               timestamp: Date.now(),
               layers: []
           };
+          // Don't duplicate if already restored recently? Naive check.
           return [...memory.messages, restoreMsg];
       }
       return [DEFAULT_INIT_MESSAGE];
@@ -87,6 +87,7 @@ const Main: React.FC = () => {
           setMessages([DEFAULT_INIT_MESSAGE]);
           setKliItems([]);
           setVraState(VRAState.Idle);
+          // Visual feedback
           alert("SYSTEM MEMORY PURGED.");
       }
   };
@@ -228,42 +229,43 @@ const Main: React.FC = () => {
 
   return (
     <div 
-      className="relative flex h-[100dvh] w-full bg-void text-slate-200 overflow-hidden font-sans selection:bg-neon-cyan/30 selection:text-neon-cyan"
+      className="relative flex h-[100dvh] w-full bg-void text-slate-100 overflow-hidden font-sans selection:bg-neon-cyan/30 selection:text-neon-cyan"
       onMouseMove={updateInteraction}
       onClick={updateInteraction}
       onKeyPress={updateInteraction}
     >
       
-      {/* --- DESKTOP LEFT SIDEBAR --- */}
+      {/* --- DESKTOP LEFT SIDEBAR (RESIZABLE) --- */}
       <div 
-        className="hidden md:flex flex-col relative shrink-0 transition-[width] duration-100 ease-out border-r border-slate-800/50 bg-slate-950/30 backdrop-blur-sm z-20 overflow-hidden"
+        className="hidden md:flex flex-col relative shrink-0 transition-[width] duration-100 ease-out border-r border-slate-700 bg-slate-950/90 z-20 overflow-hidden"
         style={{ width: isLeftCollapsed ? sidebarMin : leftWidth }}
       >
-        <VectorMonitor vectors={activeVectors} vraState={vraState} collapsed={isLeftCollapsed} onOpenDocs={() => handleOpenDocs('vec-01')} />
+        <VectorMonitor 
+            vectors={activeVectors} 
+            vraState={vraState} 
+            collapsed={isLeftCollapsed} 
+            onOpenDocs={() => handleOpenDocs('vec-01')}
+            onToggle={() => setIsLeftCollapsed(!isLeftCollapsed)}
+        />
         
+        {/* Resize Handle */}
         <div 
-            className="absolute -right-1 top-0 bottom-0 w-3 cursor-col-resize hover:bg-neon-cyan/10 z-30 flex items-center justify-center group opacity-0 hover:opacity-100 transition-opacity"
+            className="absolute -right-1 top-0 bottom-0 w-3 cursor-col-resize hover:bg-neon-cyan/20 z-30 flex items-center justify-center group opacity-0 hover:opacity-100 transition-opacity"
             onMouseDown={() => startResize('left')}
         >
-            <div className="w-[1px] h-8 bg-neon-cyan/50 group-hover:h-full transition-all duration-300" />
+            <div className="w-[2px] h-8 bg-neon-cyan group-hover:h-full transition-all duration-300 shadow-[0_0_5px_#22d3ee]" />
         </div>
-        
-        <button 
-            onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}
-            className="absolute -right-3 top-3 w-6 h-6 bg-slate-900 border border-slate-700 rounded-full flex items-center justify-center z-40 hover:border-neon-cyan hover:text-neon-cyan text-slate-500 transition-all shadow-lg"
-        >
-            <PanelLeftClose size={12} className={isLeftCollapsed ? "rotate-180" : ""} />
-        </button>
       </div>
 
       {/* --- MAIN CONTENT AREA --- */}
-      <div className="flex-1 flex flex-col relative min-w-0 z-10 bg-slate-950/20 overflow-hidden">
+      <div className="flex-1 flex flex-col relative min-w-0 z-10 bg-slate-950/50 overflow-hidden">
         
-        <div className="h-40 shrink-0 border-b border-slate-800 bg-[url('https://picsum.photos/seed/nebula/1200/400')] bg-cover bg-center relative flex items-center justify-center shadow-2xl shadow-black/50 z-20">
-           <div className="absolute inset-0 bg-void/85 backdrop-blur-[2px]"></div>
+        <div className="h-40 shrink-0 border-b border-slate-700 bg-[url('https://picsum.photos/seed/nebula/1200/400')] bg-cover bg-center relative flex items-center justify-center shadow-2xl shadow-black/80 z-20">
+           <div className="absolute inset-0 bg-void/70 backdrop-blur-[1px]"></div>
            
+           {/* Mobile Toggles */}
            <div className="absolute top-4 left-4 md:hidden z-50">
-                <button onClick={() => setShowMobileLeft(true)} className="p-2.5 bg-slate-900/90 rounded-lg border border-slate-700 text-neon-cyan shadow-lg active:scale-95 transition-transform">
+                <button onClick={() => setShowMobileLeft(true)} className="p-2.5 bg-slate-900/90 rounded-lg border border-slate-600 text-neon-cyan shadow-lg active:scale-95 transition-transform">
                     <Menu size={20} />
                 </button>
            </div>
@@ -271,14 +273,14 @@ const Main: React.FC = () => {
            <div className="absolute bottom-4 right-4 md:hidden z-50">
                 <button 
                   onClick={() => handleOpenDocs()}
-                  className="p-2.5 bg-slate-900/90 rounded-full border border-slate-700 text-slate-300 shadow-lg active:scale-95 transition-transform"
+                  className="p-2.5 bg-slate-900/90 rounded-full border border-slate-600 text-slate-200 shadow-lg active:scale-95 transition-transform"
                 >
                     <BookOpen size={18} />
                 </button>
            </div>
 
            <div className="absolute top-4 right-4 md:hidden z-50">
-                <button onClick={() => setShowMobileRight(true)} className="p-2.5 bg-slate-900/90 rounded-lg border border-slate-700 text-neon-emerald shadow-lg active:scale-95 transition-transform relative">
+                <button onClick={() => setShowMobileRight(true)} className="p-2.5 bg-slate-900/90 rounded-lg border border-slate-600 text-neon-emerald shadow-lg active:scale-95 transition-transform relative">
                     <Database size={20} />
                     {kliItems.length > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-neon-emerald rounded-full border-2 border-slate-900 animate-pulse" />}
                 </button>
@@ -287,15 +289,15 @@ const Main: React.FC = () => {
            <VRAVisualizer state={vraState} />
            
            <div className="hidden md:flex absolute top-4 left-4 items-center gap-4">
-              <h1 className="text-xl font-bold font-mono tracking-tighter text-white flex items-center gap-2">
-                 <Cpu className="text-neon-cyan" /> D-ND OS
+              <h1 className="text-2xl font-bold font-mono tracking-tighter text-white flex items-center gap-2 drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">
+                 <Cpu className="text-neon-cyan" size={24} /> D-ND OS
               </h1>
            </div>
 
            <div className="hidden md:flex absolute top-4 right-4 items-center gap-3">
               <button
                 onClick={handleSystemPurge}
-                className="flex items-center gap-2 px-3 py-1.5 bg-red-950/30 border border-red-900/50 rounded-lg text-xs font-mono text-red-400 hover:text-red-200 hover:border-red-500 hover:bg-red-900/50 transition-all group shadow-lg z-50"
+                className="flex items-center gap-2 px-3 py-1.5 bg-red-950/60 border border-red-500/50 rounded-lg text-xs font-mono text-red-300 font-bold hover:text-white hover:bg-red-900 hover:border-red-400 transition-all group shadow-lg z-50"
                 title="Purge System Memory"
               >
                   <Trash2 size={14} />
@@ -304,7 +306,7 @@ const Main: React.FC = () => {
 
               <button 
                 onClick={() => handleOpenDocs()}
-                className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/50 border border-slate-700 rounded-lg text-xs font-mono text-slate-400 hover:text-neon-cyan hover:border-neon-cyan transition-all group shadow-lg z-50"
+                className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/80 border border-slate-600 rounded-lg text-xs font-mono text-slate-300 font-bold hover:text-neon-cyan hover:border-neon-cyan transition-all group shadow-lg z-50"
               >
                   <BookOpen size={14} />
                   <span className="group-hover:tracking-wider transition-all">ARCHIVES</span>
@@ -335,26 +337,23 @@ const Main: React.FC = () => {
         />
       </div>
 
-      {/* --- DESKTOP RIGHT SIDEBAR --- */}
+      {/* --- DESKTOP RIGHT SIDEBAR (RESIZABLE) --- */}
       <div 
-        className="hidden md:flex flex-col relative shrink-0 transition-[width] duration-100 ease-out border-l border-slate-800/50 bg-slate-950/30 backdrop-blur-sm z-20 overflow-hidden"
+        className="hidden md:flex flex-col relative shrink-0 transition-[width] duration-100 ease-out border-l border-slate-700 bg-slate-950/90 z-20 overflow-hidden"
         style={{ width: isRightCollapsed ? sidebarMin : rightWidth }}
       >
-        <KLIRepository items={kliItems} collapsed={isRightCollapsed} />
+        <KLIRepository 
+            items={kliItems} 
+            collapsed={isRightCollapsed} 
+            onToggle={() => setIsRightCollapsed(!isRightCollapsed)}
+        />
 
         <div 
-            className="absolute -left-1 top-0 bottom-0 w-3 cursor-col-resize hover:bg-neon-emerald/10 z-30 flex items-center justify-center group opacity-0 hover:opacity-100 transition-opacity"
+            className="absolute -left-1 top-0 bottom-0 w-3 cursor-col-resize hover:bg-neon-emerald/20 z-30 flex items-center justify-center group opacity-0 hover:opacity-100 transition-opacity"
             onMouseDown={() => startResize('right')}
         >
-             <div className="w-[1px] h-8 bg-neon-emerald/50 group-hover:h-full transition-all duration-300" />
+             <div className="w-[2px] h-8 bg-neon-emerald group-hover:h-full transition-all duration-300 shadow-[0_0_5px_#34d399]" />
         </div>
-        
-        <button 
-            onClick={() => setIsRightCollapsed(!isRightCollapsed)}
-            className="absolute -left-3 top-3 w-6 h-6 bg-slate-900 border border-slate-700 rounded-full flex items-center justify-center z-40 hover:border-neon-emerald hover:text-neon-emerald text-slate-500 transition-all shadow-lg"
-        >
-            <PanelRightClose size={12} className={isRightCollapsed ? "rotate-180" : ""} />
-        </button>
       </div>
 
       {/* --- MOBILE DRAWERS --- */}
@@ -369,14 +368,14 @@ const Main: React.FC = () => {
                 <motion.div 
                     initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
                     transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                    className="fixed inset-y-0 left-0 w-[85vw] max-w-sm bg-slate-950 border-r border-slate-800 z-[9999] md:hidden shadow-2xl flex flex-col"
+                    className="fixed inset-y-0 left-0 w-[85vw] max-w-sm bg-slate-950 border-r border-slate-700 z-[9999] md:hidden shadow-2xl flex flex-col"
                 >
-                    <div className="flex justify-between items-center p-4 border-b border-slate-800 bg-slate-900/50">
+                    <div className="flex justify-between items-center p-4 border-b border-slate-700 bg-slate-900/90">
                         <div className="flex items-center gap-2 text-neon-cyan">
-                            <Cpu size={18} />
-                            <span className="font-mono tracking-widest font-bold">VECTOR MONITOR</span>
+                            <Cpu size={20} />
+                            <span className="font-mono tracking-widest font-bold text-white">VECTOR MONITOR</span>
                         </div>
-                        <button onClick={() => setShowMobileLeft(false)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-colors"><X size={20} /></button>
+                        <button onClick={() => setShowMobileLeft(false)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-colors"><X size={24} /></button>
                     </div>
                     <div className="flex-1 overflow-hidden">
                        <VectorMonitor vectors={activeVectors} vraState={vraState} onOpenDocs={() => { setShowMobileLeft(false); handleOpenDocs('vec-01'); }} />
@@ -395,14 +394,14 @@ const Main: React.FC = () => {
                 <motion.div 
                     initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
                     transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                    className="fixed inset-y-0 right-0 w-[85vw] max-w-sm bg-slate-950 border-l border-slate-800 z-[9999] md:hidden shadow-2xl flex flex-col"
+                    className="fixed inset-y-0 right-0 w-[85vw] max-w-sm bg-slate-950 border-l border-slate-700 z-[9999] md:hidden shadow-2xl flex flex-col"
                 >
-                    <div className="flex justify-between items-center p-4 border-b border-slate-800 bg-slate-900/50">
+                    <div className="flex justify-between items-center p-4 border-b border-slate-700 bg-slate-900/90">
                          <div className="flex items-center gap-2 text-neon-emerald">
-                            <Database size={18} />
-                            <span className="font-mono tracking-widest font-bold">KLI REPOSITORY</span>
+                            <Database size={20} />
+                            <span className="font-mono tracking-widest font-bold text-white">KLI REPOSITORY</span>
                         </div>
-                        <button onClick={() => setShowMobileRight(false)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-colors"><X size={20} /></button>
+                        <button onClick={() => setShowMobileRight(false)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-colors"><X size={24} /></button>
                     </div>
                     <div className="flex-1 overflow-hidden">
                        <KLIRepository items={kliItems} />

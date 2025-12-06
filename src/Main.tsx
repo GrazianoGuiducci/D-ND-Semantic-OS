@@ -12,10 +12,10 @@ import VectorMonitor from './components/VectorMonitor';
 import KLIRepository from './components/KLIRepository';
 import AmbientPulse from './components/AmbientPulse';
 import Guide from './Guide'; 
-import { Cpu, Menu, Database, X, PanelLeftClose, PanelRightClose, BookOpen, Trash2 } from 'lucide-react';
+import { Cpu, Menu, Database, X, BookOpen, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-console.log("D-ND OS :: MAIN LINK ESTABLISHED [CLEAN v4.1 - PERSISTENCE LAYER ACTIVE]");
+console.log("D-ND OS :: MAIN LINK ESTABLISHED [CLEAN v4.3 - UX REFACTOR]");
 
 const DEFAULT_INIT_MESSAGE: Message = {
     id: 'init-1',
@@ -236,32 +236,35 @@ const Main: React.FC = () => {
       onKeyPress={updateInteraction}
     >
       
+      {/* --- DESKTOP LEFT SIDEBAR (RESIZABLE) --- */}
       <div 
         className="hidden md:flex flex-col relative shrink-0 transition-[width] duration-100 ease-out border-r border-slate-800/50 bg-slate-950/30 backdrop-blur-sm z-20 overflow-hidden"
         style={{ width: isLeftCollapsed ? sidebarMin : leftWidth }}
       >
-        <VectorMonitor vectors={activeVectors} vraState={vraState} collapsed={isLeftCollapsed} onOpenDocs={() => handleOpenDocs('vec-01')} />
+        <VectorMonitor 
+            vectors={activeVectors} 
+            vraState={vraState} 
+            collapsed={isLeftCollapsed} 
+            onOpenDocs={() => handleOpenDocs('vec-01')}
+            onToggle={() => setIsLeftCollapsed(!isLeftCollapsed)}
+        />
         
+        {/* Resize Handle */}
         <div 
             className="absolute -right-1 top-0 bottom-0 w-3 cursor-col-resize hover:bg-neon-cyan/10 z-30 flex items-center justify-center group opacity-0 hover:opacity-100 transition-opacity"
             onMouseDown={() => startResize('left')}
         >
             <div className="w-[1px] h-8 bg-neon-cyan/50 group-hover:h-full transition-all duration-300" />
         </div>
-        
-        <button 
-            onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}
-            className="absolute -right-3 top-3 w-6 h-6 bg-slate-900 border border-slate-700 rounded-full flex items-center justify-center z-40 hover:border-neon-cyan hover:text-neon-cyan text-slate-500 transition-all shadow-lg"
-        >
-            <PanelLeftClose size={12} className={isLeftCollapsed ? "rotate-180" : ""} />
-        </button>
       </div>
 
-      <div className="flex-1 flex flex-col relative min-w-0 z-10 bg-slate-950/20">
+      {/* --- MAIN CONTENT AREA --- */}
+      <div className="flex-1 flex flex-col relative min-w-0 z-10 bg-slate-950/20 overflow-hidden">
         
         <div className="h-40 shrink-0 border-b border-slate-800 bg-[url('https://picsum.photos/seed/nebula/1200/400')] bg-cover bg-center relative flex items-center justify-center shadow-2xl shadow-black/50 z-20">
            <div className="absolute inset-0 bg-void/85 backdrop-blur-[2px]"></div>
            
+           {/* Mobile Toggles */}
            <div className="absolute top-4 left-4 md:hidden z-50">
                 <button onClick={() => setShowMobileLeft(true)} className="p-2.5 bg-slate-900/90 rounded-lg border border-slate-700 text-neon-cyan shadow-lg active:scale-95 transition-transform">
                     <Menu size={20} />
@@ -293,7 +296,6 @@ const Main: React.FC = () => {
            </div>
 
            <div className="hidden md:flex absolute top-4 right-4 items-center gap-3">
-              {/* PURGE BUTTON */}
               <button
                 onClick={handleSystemPurge}
                 className="flex items-center gap-2 px-3 py-1.5 bg-red-950/30 border border-red-900/50 rounded-lg text-xs font-mono text-red-400 hover:text-red-200 hover:border-red-500 hover:bg-red-900/50 transition-all group shadow-lg z-50"
@@ -336,11 +338,16 @@ const Main: React.FC = () => {
         />
       </div>
 
+      {/* --- DESKTOP RIGHT SIDEBAR (RESIZABLE) --- */}
       <div 
         className="hidden md:flex flex-col relative shrink-0 transition-[width] duration-100 ease-out border-l border-slate-800/50 bg-slate-950/30 backdrop-blur-sm z-20 overflow-hidden"
         style={{ width: isRightCollapsed ? sidebarMin : rightWidth }}
       >
-        <KLIRepository items={kliItems} collapsed={isRightCollapsed} />
+        <KLIRepository 
+            items={kliItems} 
+            collapsed={isRightCollapsed} 
+            onToggle={() => setIsRightCollapsed(!isRightCollapsed)}
+        />
 
         <div 
             className="absolute -left-1 top-0 bottom-0 w-3 cursor-col-resize hover:bg-neon-emerald/10 z-30 flex items-center justify-center group opacity-0 hover:opacity-100 transition-opacity"
@@ -348,15 +355,9 @@ const Main: React.FC = () => {
         >
              <div className="w-[1px] h-8 bg-neon-emerald/50 group-hover:h-full transition-all duration-300" />
         </div>
-        
-        <button 
-            onClick={() => setIsRightCollapsed(!isRightCollapsed)}
-            className="absolute -left-3 top-3 w-6 h-6 bg-slate-900 border border-slate-700 rounded-full flex items-center justify-center z-40 hover:border-neon-emerald hover:text-neon-emerald text-slate-500 transition-all shadow-lg"
-        >
-            <PanelRightClose size={12} className={isRightCollapsed ? "rotate-180" : ""} />
-        </button>
       </div>
 
+      {/* --- MOBILE DRAWERS --- */}
       <AnimatePresence>
         {showMobileLeft && (
             <>
@@ -378,6 +379,7 @@ const Main: React.FC = () => {
                         <button onClick={() => setShowMobileLeft(false)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-colors"><X size={20} /></button>
                     </div>
                     <div className="flex-1 overflow-hidden">
+                       {/* Optional toggle for mobile if needed, though usually drawer closes */}
                        <VectorMonitor vectors={activeVectors} vraState={vraState} onOpenDocs={() => { setShowMobileLeft(false); handleOpenDocs('vec-01'); }} />
                     </div>
                 </motion.div>
