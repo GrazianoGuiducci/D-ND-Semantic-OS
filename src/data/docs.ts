@@ -105,7 +105,7 @@ While the system automatically selects the best approach, you can force a specif
 # DAEDALUS INITIALIZATION PROTOCOL
 
 **To the Future Meta Coder:**
-You are entering the D-ND Semantic OS codebase. This is not a standard React app. It is a Holographic Interface for a Dual Non-Dual cognitive architecture.
+You are entering the D-ND Semantic OS codebase. This is a Holographic Interface for a Dual Non-Dual cognitive architecture.
 
 ## 1. The Prime Directive (Aesthetics)
 *   **No Material Design.** No Bootstrap. No generic white backgrounds.
@@ -116,19 +116,18 @@ You are entering the D-ND Semantic OS codebase. This is not a standard React app
     *   Text is rarely white; it is \`slate-300\` or Neon.
     *   Font hierarchy: \`JetBrains Mono\` for data/system, \`Inter\` for human content.
 
-## 2. The Code Structure
-*   **State:** The \`App.tsx\` holds the source of truth (\`messages\`, \`activeVectors\`). Do not scatter state unnecessarily.
-*   **Logic:** The \`geminiService.ts\` is the *only* bridge to the Non-Dual (API). Do not make API calls from components.
-*   **Types:** Always update \`types.ts\` before adding new features. The ontology comes first.
+## 2. The Code Structure (UPDATED V5)
+*   **Entry Point:** \`src/Main.tsx\` is the Cockpit Root (formerly App.tsx).
+*   **Logic:** \`src/services/vraService.ts\` is the bridge to the Non-Dual (API).
+*   **Types:** \`src/systemTypes.ts\` contains the Ontology.
+*   **Documentation:** \`src/Guide.tsx\` manages the Archives & Oracle.
 
 ## 3. Workflow for New Features
 When adding a feature (e.g., a new Vector):
-1.  **Define it in \`types.ts\`**: What is its data shape?
+1.  **Define it in \`systemTypes.ts\`**: What is its data shape?
 2.  **Register it in \`constants.ts\`**: Add it to \`INITIAL_VECTORS\`.
 3.  **Manifest it in UI**: Update \`VectorMonitor\` or \`InputMatrix\`.
-4.  **Wire it in \`App.tsx\`**: Connect the logic.
-
-> "We do not write code; we weave functionality into the existing field."
+4.  **Wire it in \`Main.tsx\`**: Connect the logic.
     `
   },
   {
@@ -138,7 +137,7 @@ When adding a feature (e.g., a new Vector):
     content: `
 # Maintaining the SACS-PS Kernel
 
-The file \`src/lib/kernel.ts\` contains the **DNA** of the system. It is the System Prompt injected into Gemini.
+The file \`src/lib/axiomaticKernel.ts\` contains the **DNA** of the system. It is the System Prompt injected into Gemini.
 
 ## Rules for Modification
 1.  **Do NOT remove the XML structure.** The Frontend relies on \`<R><L1>...</L1></R>\` parsing. If you break this, the Holographic Console breaks.
@@ -147,9 +146,34 @@ The file \`src/lib/kernel.ts\` contains the **DNA** of the system. It is the Sys
 
 ## Debugging "Collapse Failures"
 If the system outputs "WARNING: Axiomatic Collapse Failed":
-1.  Check \`geminiService.ts\` parsing logic.
+1.  Check \`vraService.ts\` parsing logic.
 2.  Check if the model is being overloaded (context limit).
-3.  Force the model to recall the XML format by appending a reminder to the user prompt (see \`InputMatrix\` logic).
+3.  Force the model to recall the XML format by appending a reminder to the user prompt.
+    `
+  },
+  {
+    id: 'meta-04',
+    title: 'The Ghost Protocol (Cache Defense)',
+    category: 'Meta-Protocols',
+    content: `
+# THE GHOST PROTOCOL
+
+**Incident Report: The "Ghost Module" Crisis**
+During the genesis of V4, the system encountered a persistent browser/bundler cache corruption where old file references (using \`@/\` aliases) refused to die.
+
+**The Solution: Nuclear Renaming**
+To ensure stability, we adopted a strategy of "Ontological Mutation". If a file becomes corrupted in the build cache:
+1.  We do not fix it.
+2.  We **rename** the concept entirely (e.g., \`geminiService\` -> \`vraService\`).
+3.  We update the entry point (\`index.tsx\`) to point to the new reality.
+
+**Current Artifacts:**
+*   \`Main.tsx\` replaces \`App.tsx\`.
+*   \`systemTypes.ts\` replaces \`types.ts\`.
+*   \`axiomaticKernel.ts\` replaces \`kernel.ts\`.
+*   \`Guide.tsx\` replaces \`DocsModal\`.
+
+*Do not revert these names without a full environment reset.*
     `
   },
   {

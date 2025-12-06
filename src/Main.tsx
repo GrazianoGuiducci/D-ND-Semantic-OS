@@ -4,6 +4,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Message, MessageRole, VRAState, ExpertVector, KLIItem } from './systemTypes';
 import { INITIAL_VECTORS } from './constants';
 import { sendMessageToDND, parseDNDResponse } from './services/vraService';
+import { saveMemory, loadMemory, clearMemory } from './services/storageService';
 import HolographicConsole from './components/HolographicConsole';
 import InputMatrix from './components/InputMatrix';
 import VRAVisualizer from './components/VRAVisualizer';
@@ -11,27 +12,53 @@ import VectorMonitor from './components/VectorMonitor';
 import KLIRepository from './components/KLIRepository';
 import AmbientPulse from './components/AmbientPulse';
 import Guide from './Guide'; 
-import { Cpu, Menu, Database, X, PanelLeftClose, PanelRightClose, BookOpen } from 'lucide-react';
+import { Cpu, Menu, Database, X, PanelLeftClose, PanelRightClose, BookOpen, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-console.log("D-ND OS :: MAIN LINK ESTABLISHED [CLEAN v4 - SERVICES MIGRATED]");
+console.log("D-ND OS :: MAIN LINK ESTABLISHED [CLEAN v4.1 - PERSISTENCE LAYER ACTIVE]");
+
+const DEFAULT_INIT_MESSAGE: Message = {
+    id: 'init-1',
+    role: MessageRole.System,
+    content: 'SYSTEM INITIALIZED. VRA CORE ONLINE. WAITING FOR INPUT VECTOR.',
+    timestamp: Date.now(),
+    layers: [
+      { id: 'l1', type: 'direct', content: 'System Ready. Awaiting perturbation vector.' },
+      { id: 'l2', type: 'structural', content: 'Kernel: SACS-PS v14.0\nArchitecture: Aethelred v3.1\nMode: Idle' },
+    ]
+};
 
 const Main: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'init-1',
-      role: MessageRole.System,
-      content: 'SYSTEM INITIALIZED. VRA CORE ONLINE. WAITING FOR INPUT VECTOR.',
-      timestamp: Date.now(),
-      layers: [
-        { id: 'l1', type: 'direct', content: 'System Ready. Awaiting perturbation vector.' },
-        { id: 'l2', type: 'structural', content: 'Kernel: SACS-PS v14.0\nArchitecture: Aethelred v3.1\nMode: Idle' },
-      ]
-    }
-  ]);
+  // --- STATE INITIALIZATION WITH MEMORY CHECK ---
+  const [messages, setMessages] = useState<Message[]>(() => {
+      const memory = loadMemory();
+      if (memory && memory.messages.length > 0) {
+          // Inject a meta-message indicating restoration
+          const restoreMsg: Message = {
+              id: `restore-${Date.now()}`,
+              role: MessageRole.System,
+              content: 'MEMORY RESTORED FROM LOCAL STORAGE.',
+              timestamp: Date.now(),
+              layers: []
+          };
+          // Don't duplicate if already restored recently? Naive check.
+          return [...memory.messages, restoreMsg];
+      }
+      return [DEFAULT_INIT_MESSAGE];
+  });
+
+  const [kliItems, setKliItems] = useState<KLIItem[]>(() => {
+      const memory = loadMemory();
+      return memory ? memory.kliItems : [];
+  });
+
+  // --- PERSISTENCE HOOK ---
+  useEffect(() => {
+      saveMemory(messages, kliItems);
+  }, [messages, kliItems]);
+
   const [vraState, setVraState] = useState<VRAState>(VRAState.Idle);
   const [activeVectors, setActiveVectors] = useState<ExpertVector[]>(INITIAL_VECTORS);
-  const [kliItems, setKliItems] = useState<KLIItem[]>([]);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
   const [isSystemIdle, setIsSystemIdle] = useState(false);
 
@@ -52,6 +79,18 @@ const Main: React.FC = () => {
       setActiveDocId(id);
       setIsGuideOpen(true);
       updateInteraction();
+  };
+
+  // --- SYSTEM PURGE ---
+  const handleSystemPurge = () => {
+      if (window.confirm("WARNING: INITIATING SYSTEM PURGE.\n\nThis will wipe all Axiomatic RAM (Chat History & KLI). Are you sure?")) {
+          clearMemory();
+          setMessages([DEFAULT_INIT_MESSAGE]);
+          setKliItems([]);
+          setVraState(VRAState.Idle);
+          // Visual feedback
+          alert("SYSTEM MEMORY PURGED.");
+      }
   };
 
   const [leftWidth, setLeftWidth] = useState(260);
@@ -253,10 +292,20 @@ const Main: React.FC = () => {
               </h1>
            </div>
 
-           <div className="hidden md:flex absolute top-4 right-4 items-center gap-4">
+           <div className="hidden md:flex absolute top-4 right-4 items-center gap-3">
+              {/* PURGE BUTTON */}
+              <button
+                onClick={handleSystemPurge}
+                className="flex items-center gap-2 px-3 py-1.5 bg-red-950/30 border border-red-900/50 rounded-lg text-xs font-mono text-red-400 hover:text-red-200 hover:border-red-500 hover:bg-red-900/50 transition-all group shadow-lg z-50"
+                title="Purge System Memory"
+              >
+                  <Trash2 size={14} />
+                  <span className="hidden lg:inline group-hover:tracking-wider transition-all">PURGE</span>
+              </button>
+
               <button 
                 onClick={() => handleOpenDocs()}
-                className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/50 border border-slate-700 rounded-lg text-xs font-mono text-slate-400 hover:text-neon-cyan hover:border-neon-cyan transition-all group z-50 shadow-lg"
+                className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/50 border border-slate-700 rounded-lg text-xs font-mono text-slate-400 hover:text-neon-cyan hover:border-neon-cyan transition-all group shadow-lg z-50"
               >
                   <BookOpen size={14} />
                   <span className="group-hover:tracking-wider transition-all">ARCHIVES</span>

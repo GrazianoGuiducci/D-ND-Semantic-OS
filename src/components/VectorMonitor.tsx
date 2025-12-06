@@ -29,7 +29,7 @@ const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collap
          </div>
          
          <div 
-            className="flex-1 w-full flex flex-col items-center gap-4 overflow-y-auto overflow-x-hidden py-2 no-scrollbar"
+            className="flex-1 w-full flex flex-col items-center gap-4 overflow-y-auto overflow-x-hidden py-2"
             style={hideScrollbarStyle}
          >
             {/* Inject CSS to hide webkit scrollbar locally */}
@@ -40,12 +40,12 @@ const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collap
             `}</style>
 
             {vectors.map(v => (
-                <div key={v.id} className="relative group shrink-0">
+                <div key={v.id} className="relative group shrink-0 w-10 h-10 flex items-center justify-center">
                     <motion.div
                         layoutId={`vector-icon-${v.id}`}
-                        className={`relative w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-300 ${
+                        className={`absolute inset-0 rounded-xl flex items-center justify-center border transition-all duration-300 ${
                             v.active 
-                            ? 'border-slate-500 bg-slate-800 opacity-100 scale-105 shadow-lg shadow-neon-cyan/10' 
+                            ? 'border-slate-500 bg-slate-800 opacity-100 shadow-lg shadow-neon-cyan/10' 
                             : 'border-slate-800/50 bg-slate-900/30 opacity-50 grayscale hover:opacity-100 hover:grayscale-0 hover:bg-slate-800 hover:border-slate-700'
                         }`}
                         animate={isProcessing && v.active ? { 
@@ -56,7 +56,7 @@ const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collap
                     >
                         <div className={`w-2.5 h-2.5 rounded-full ${v.color.replace('text-', 'bg-')}`} />
                         
-                        {/* Ping Effect - Contained */}
+                        {/* Ping Effect - Strictly contained */}
                         {isProcessing && v.active && (
                              <span className={`absolute inline-flex h-full w-full rounded-xl opacity-75 animate-ping ${v.color.replace('text-', 'bg-')}`}></span>
                         )}
@@ -110,8 +110,7 @@ const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collap
       </div>
 
       <div 
-        className="flex-1 space-y-3 overflow-y-auto overflow-x-hidden pr-2 scrollbar-thin scrollbar-thumb-slate-800 hover:scrollbar-thumb-slate-700"
-        style={{ scrollbarGutter: 'stable' }} // Prevents layout shift
+        className="flex-1 space-y-3 overflow-y-auto overflow-x-hidden pr-2 scrollbar-thin scrollbar-thumb-slate-800 hover:scrollbar-thumb-slate-700 pb-10"
       >
         <AnimatePresence>
         {vectors.map((vector) => {
