@@ -1,6 +1,10 @@
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+import Main from './src/Main';
+
+// CACHE BUSTING LOG v15.0 - FINAL
+console.log('D-ND OS: MAIN ROOT ENGAGED [V15.0]');
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -10,6 +14,6 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <App />
+    <Main />
   </React.StrictMode>
 );

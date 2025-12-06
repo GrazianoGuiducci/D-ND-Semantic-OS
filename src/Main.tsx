@@ -1,21 +1,22 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
-import { Message, MessageRole, VRAState, ExpertVector, KLIItem } from './types';
+// STRICT RELATIVE IMPORTS
+import { Message, MessageRole, VRAState, ExpertVector, KLIItem } from './systemTypes';
 import { INITIAL_VECTORS } from './constants';
-import { sendMessageToDND, parseDNDResponse } from './services/geminiService';
+import { sendMessageToDND, parseDNDResponse } from './services/vraService';
 import HolographicConsole from './components/HolographicConsole';
 import InputMatrix from './components/InputMatrix';
 import VRAVisualizer from './components/VRAVisualizer';
 import VectorMonitor from './components/VectorMonitor';
 import KLIRepository from './components/KLIRepository';
 import AmbientPulse from './components/AmbientPulse';
-// STRICT RELATIVE IMPORT - FINAL FIX
-import SystemManual from './components/SystemManual';
+import Guide from './Guide'; 
 import { Cpu, Menu, Database, X, PanelLeftClose, PanelRightClose, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-console.log("App Version: DND-OS-v5.1-STABLE");
+console.log("D-ND OS :: MAIN LINK ESTABLISHED [CLEAN v4 - SERVICES MIGRATED]");
 
-const App: React.FC = () => {
+const Main: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'init-1',
@@ -34,7 +35,6 @@ const App: React.FC = () => {
   const [lastInteraction, setLastInteraction] = useState(Date.now());
   const [isSystemIdle, setIsSystemIdle] = useState(false);
 
-  // --- HEARTBEAT: IDLE CHECK ---
   useEffect(() => {
     const heartbeat = setInterval(() => {
         const isIdleNow = Date.now() - lastInteraction > 5000;
@@ -45,33 +45,29 @@ const App: React.FC = () => {
     return () => clearInterval(heartbeat);
   }, [lastInteraction, isSystemIdle]);
 
-  // --- DOCS STATE ---
-  const [isDocsOpen, setIsDocsOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [activeDocId, setActiveDocId] = useState<string | undefined>(undefined);
 
   const handleOpenDocs = (id?: string) => {
       setActiveDocId(id);
-      setIsDocsOpen(true);
+      setIsGuideOpen(true);
       updateInteraction();
   };
 
-  // --- LAYOUT ENGINE STATE ---
   const [leftWidth, setLeftWidth] = useState(260);
   const [rightWidth, setRightWidth] = useState(280);
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
   const [isRightCollapsed, setIsRightCollapsed] = useState(false);
   const [isDragging, setIsDragging] = useState<'left' | 'right' | null>(null);
   
-  // Mobile States
   const [showMobileLeft, setShowMobileLeft] = useState(false);
   const [showMobileRight, setShowMobileRight] = useState(false);
 
-  const sidebarMin = 72; // Width when collapsed (icon mode)
-  const sidebarThreshold = 180; // Snap point
+  const sidebarMin = 72; 
+  const sidebarThreshold = 180; 
 
   const updateInteraction = () => setLastInteraction(Date.now());
 
-  // --- RESIZE HANDLERS ---
   const startResize = (direction: 'left' | 'right') => {
     setIsDragging(direction);
     document.body.style.cursor = 'col-resize';
@@ -117,7 +113,6 @@ const App: React.FC = () => {
     };
   }, [handleResize, stopResize]);
 
-  // --- LOGIC ---
   const handleSendMessage = async (text: string, overrideVectorName?: string) => {
     updateInteraction();
     const finalContent = overrideVectorName 
@@ -134,7 +129,6 @@ const App: React.FC = () => {
 
     setVraState(VRAState.ResonanceScan);
     
-    // Simulate Diagnosis
     setTimeout(() => {
       setVraState(VRAState.Weaving);
       const weavingVectors = activeVectors.map(v => ({
@@ -188,7 +182,7 @@ const App: React.FC = () => {
       const errorMsg: Message = {
         id: Date.now().toString(),
         role: MessageRole.System,
-        content: "CRITICAL ERROR IN VRA CORE: " + (error instanceof Error ? error.message : "Unknown error"),
+        content: "CRITICAL ERROR: " + (error instanceof Error ? error.message : "Unknown error"),
         timestamp: Date.now()
       };
       setMessages(prev => [...prev, errorMsg]);
@@ -203,14 +197,12 @@ const App: React.FC = () => {
       onKeyPress={updateInteraction}
     >
       
-      {/* --- DESKTOP LEFT SIDEBAR (RESIZABLE) --- */}
       <div 
         className="hidden md:flex flex-col relative shrink-0 transition-[width] duration-100 ease-out border-r border-slate-800/50 bg-slate-950/30 backdrop-blur-sm z-20 overflow-hidden"
         style={{ width: isLeftCollapsed ? sidebarMin : leftWidth }}
       >
         <VectorMonitor vectors={activeVectors} vraState={vraState} collapsed={isLeftCollapsed} onOpenDocs={() => handleOpenDocs('vec-01')} />
         
-        {/* Resize Handle */}
         <div 
             className="absolute -right-1 top-0 bottom-0 w-3 cursor-col-resize hover:bg-neon-cyan/10 z-30 flex items-center justify-center group opacity-0 hover:opacity-100 transition-opacity"
             onMouseDown={() => startResize('left')}
@@ -218,7 +210,6 @@ const App: React.FC = () => {
             <div className="w-[1px] h-8 bg-neon-cyan/50 group-hover:h-full transition-all duration-300" />
         </div>
         
-        {/* Toggle Button */}
         <button 
             onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}
             className="absolute -right-3 top-3 w-6 h-6 bg-slate-900 border border-slate-700 rounded-full flex items-center justify-center z-40 hover:border-neon-cyan hover:text-neon-cyan text-slate-500 transition-all shadow-lg"
@@ -227,21 +218,17 @@ const App: React.FC = () => {
         </button>
       </div>
 
-      {/* --- MAIN CONTENT AREA --- */}
       <div className="flex-1 flex flex-col relative min-w-0 z-10 bg-slate-950/20">
         
-        {/* Header / Visualizer */}
         <div className="h-40 shrink-0 border-b border-slate-800 bg-[url('https://picsum.photos/seed/nebula/1200/400')] bg-cover bg-center relative flex items-center justify-center shadow-2xl shadow-black/50 z-20">
            <div className="absolute inset-0 bg-void/85 backdrop-blur-[2px]"></div>
            
-           {/* Mobile Menu Toggles */}
            <div className="absolute top-4 left-4 md:hidden z-50">
                 <button onClick={() => setShowMobileLeft(true)} className="p-2.5 bg-slate-900/90 rounded-lg border border-slate-700 text-neon-cyan shadow-lg active:scale-95 transition-transform">
                     <Menu size={20} />
                 </button>
            </div>
            
-           {/* Mobile Docs Toggle (Added for access) */}
            <div className="absolute bottom-4 right-4 md:hidden z-50">
                 <button 
                   onClick={() => handleOpenDocs()}
@@ -260,14 +247,12 @@ const App: React.FC = () => {
 
            <VRAVisualizer state={vraState} />
            
-           {/* TITLE (Desktop) */}
            <div className="hidden md:flex absolute top-4 left-4 items-center gap-4">
               <h1 className="text-xl font-bold font-mono tracking-tighter text-white flex items-center gap-2">
                  <Cpu className="text-neon-cyan" /> D-ND OS
               </h1>
            </div>
 
-           {/* DOCS TRIGGER (Desktop) - Moved to Top Right for visibility */}
            <div className="hidden md:flex absolute top-4 right-4 items-center gap-4">
               <button 
                 onClick={() => handleOpenDocs()}
@@ -279,7 +264,6 @@ const App: React.FC = () => {
            </div>
         </div>
 
-        {/* Middle: Console */}
         <div className="flex-1 flex overflow-hidden relative">
             <HolographicConsole messages={messages} vraState={vraState} />
             
@@ -290,7 +274,6 @@ const App: React.FC = () => {
             />
         </div>
 
-        {/* Input */}
         <InputMatrix 
             onSend={handleSendMessage} 
             disabled={vraState !== VRAState.Idle && vraState !== VRAState.Manifested && vraState !== VRAState.Input} 
@@ -304,14 +287,12 @@ const App: React.FC = () => {
         />
       </div>
 
-      {/* --- DESKTOP RIGHT SIDEBAR (RESIZABLE) --- */}
       <div 
         className="hidden md:flex flex-col relative shrink-0 transition-[width] duration-100 ease-out border-l border-slate-800/50 bg-slate-950/30 backdrop-blur-sm z-20 overflow-hidden"
         style={{ width: isRightCollapsed ? sidebarMin : rightWidth }}
       >
         <KLIRepository items={kliItems} collapsed={isRightCollapsed} />
 
-        {/* Resize Handle */}
         <div 
             className="absolute -left-1 top-0 bottom-0 w-3 cursor-col-resize hover:bg-neon-emerald/10 z-30 flex items-center justify-center group opacity-0 hover:opacity-100 transition-opacity"
             onMouseDown={() => startResize('right')}
@@ -319,7 +300,6 @@ const App: React.FC = () => {
              <div className="w-[1px] h-8 bg-neon-emerald/50 group-hover:h-full transition-all duration-300" />
         </div>
         
-        {/* Toggle Button */}
         <button 
             onClick={() => setIsRightCollapsed(!isRightCollapsed)}
             className="absolute -left-3 top-3 w-6 h-6 bg-slate-900 border border-slate-700 rounded-full flex items-center justify-center z-40 hover:border-neon-emerald hover:text-neon-emerald text-slate-500 transition-all shadow-lg"
@@ -328,7 +308,6 @@ const App: React.FC = () => {
         </button>
       </div>
 
-      {/* --- MOBILE DRAWERS --- */}
       <AnimatePresence>
         {showMobileLeft && (
             <>
@@ -383,12 +362,10 @@ const App: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* --- DOCS MODAL (RENAMED) --- */}
       <AnimatePresence>
-        {isDocsOpen && <SystemManual isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} initialDocId={activeDocId} />}
+        {isGuideOpen && <Guide isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} initialDocId={activeDocId} />}
       </AnimatePresence>
 
-      {/* Resize Protection Overlay */}
       {isDragging && (
         <div className="fixed inset-0 z-[1000] cursor-col-resize" />
       )}
@@ -397,4 +374,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default Main;

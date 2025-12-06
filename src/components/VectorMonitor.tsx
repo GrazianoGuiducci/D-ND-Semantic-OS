@@ -1,18 +1,20 @@
+
 import React from 'react';
-import { ExpertVector, VRAState } from '../types';
+import { ExpertVector, VRAState } from '../systemTypes';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Cpu, Hexagon } from 'lucide-react';
+import { Activity, Cpu, Hexagon, HelpCircle } from 'lucide-react';
 
 interface VectorMonitorProps {
   vectors: ExpertVector[];
   vraState: VRAState;
   collapsed?: boolean;
+  onOpenDocs?: () => void;
 }
 
-const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collapsed = false }) => {
+const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collapsed = false, onOpenDocs }) => {
   const isProcessing = vraState !== VRAState.Idle && vraState !== VRAState.Manifested;
 
-  // Custom style to hide scrollbar cross-browser
+  // Custom style to hide scrollbar cross-browser while keeping functionality
   const hideScrollbarStyle: React.CSSProperties = {
     scrollbarWidth: 'none', // Firefox
     msOverflowStyle: 'none', // IE/Edge
@@ -68,7 +70,18 @@ const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collap
             ))}
          </div>
 
-         <div className="mt-auto text-slate-700 hover:text-slate-500 transition-colors cursor-help p-2 shrink-0" title="Kernel Active">
+         {/* Docs Button for Collapsed View */}
+         {onOpenDocs && (
+             <button 
+                onClick={onOpenDocs}
+                className="p-2 text-slate-600 hover:text-neon-cyan transition-colors rounded-lg hover:bg-slate-900/50 shrink-0 mb-2" 
+                title="Open Archives"
+             >
+                 <HelpCircle size={18} />
+             </button>
+         )}
+
+         <div className="mt-auto text-slate-700 p-2 shrink-0" title="Kernel Active">
              <Cpu size={18} />
          </div>
       </div>
@@ -78,17 +91,28 @@ const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collap
   // --- EXPANDED VIEW (FULL MONITOR) ---
   return (
     <div className="h-full w-full p-4 flex flex-col gap-4 overflow-hidden">
-      <div className="flex items-center gap-3 mb-2 border-b border-slate-800 pb-3 shrink-0">
-        <div className="p-1.5 bg-neon-cyan/10 rounded-lg">
-             <Hexagon className="w-4 h-4 text-neon-cyan" />
+      <div className="flex items-center gap-3 mb-2 border-b border-slate-800 pb-3 shrink-0 justify-between">
+        <div className="flex items-center gap-3">
+             <div className="p-1.5 bg-neon-cyan/10 rounded-lg">
+                <Hexagon className="w-4 h-4 text-neon-cyan" />
+            </div>
+            <div>
+                <h2 className="text-xs font-mono text-slate-300 font-bold uppercase tracking-widest whitespace-nowrap">Active Vectors</h2>
+                <p className="text-[10px] text-slate-600 font-mono">NEURAL STATUS: ONLINE</p>
+            </div>
         </div>
-        <div>
-            <h2 className="text-xs font-mono text-slate-300 font-bold uppercase tracking-widest whitespace-nowrap">Active Vectors</h2>
-            <p className="text-[10px] text-slate-600 font-mono">NEURAL STATUS: ONLINE</p>
-        </div>
+        
+        {onOpenDocs && (
+             <button onClick={onOpenDocs} className="text-slate-600 hover:text-neon-cyan transition-colors p-1 hover:bg-slate-800 rounded" title="Vector Documentation">
+                 <HelpCircle size={14} />
+             </button>
+        )}
       </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto overflow-x-hidden pr-2 scrollbar-thin scrollbar-thumb-slate-800 hover:scrollbar-thumb-slate-700">
+      <div 
+        className="flex-1 space-y-3 overflow-y-auto overflow-x-hidden pr-2 scrollbar-thin scrollbar-thumb-slate-800 hover:scrollbar-thumb-slate-700"
+        style={{ scrollbarGutter: 'stable' }} // Prevents layout shift
+      >
         <AnimatePresence>
         {vectors.map((vector) => {
           const isPulse = isProcessing && vector.active;
@@ -100,7 +124,7 @@ const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collap
                 vector.active 
                 ? 'border-slate-600 bg-slate-800/90 shadow-xl' 
                 : 'border-slate-800/50 bg-slate-900/40 opacity-70 hover:opacity-100 hover:bg-slate-800/60 hover:border-slate-700'
-              } transition-all cursor-default group`}
+              } transition-all cursor-default group w-full`}
               animate={isPulse ? { borderColor: ['rgba(71,85,105,1)', 'rgba(6,182,212,0.6)', 'rgba(71,85,105,1)'] } : {}}
               transition={{ duration: 1.5, repeat: Infinity }}
             >

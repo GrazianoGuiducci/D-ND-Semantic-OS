@@ -1,5 +1,6 @@
+
 import React, { useRef, useEffect } from 'react';
-import { KLIItem } from '../types';
+import { KLIItem } from '../systemTypes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Database, Sparkles, Brain } from 'lucide-react';
 

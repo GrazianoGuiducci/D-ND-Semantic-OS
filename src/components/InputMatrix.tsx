@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Send, Mic, Command, Zap, HelpCircle } from 'lucide-react';
-import { ExpertVector } from '../types';
+import { ExpertVector } from '../systemTypes';
 
 interface InputMatrixProps {
   onSend: (text: string, overrideVector?: string) => void;

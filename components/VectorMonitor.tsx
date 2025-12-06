@@ -1,28 +1,45 @@
 import React from 'react';
 import { ExpertVector, VRAState } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Cpu, Hexagon } from 'lucide-react';
+import { Activity, Cpu, Hexagon, HelpCircle } from 'lucide-react';
 
 interface VectorMonitorProps {
   vectors: ExpertVector[];
   vraState: VRAState;
   collapsed?: boolean;
+  onOpenDocs?: () => void;
 }
 
-const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collapsed = false }) => {
+const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collapsed = false, onOpenDocs }) => {
   const isProcessing = vraState !== VRAState.Idle && vraState !== VRAState.Manifested;
+
+  // Custom style to hide scrollbar cross-browser while keeping functionality
+  const hideScrollbarStyle: React.CSSProperties = {
+    scrollbarWidth: 'none', // Firefox
+    msOverflowStyle: 'none', // IE/Edge
+  };
 
   // --- COLLAPSED VIEW (ICON STRIP) ---
   if (collapsed) {
     return (
       <div className="h-full w-full flex flex-col items-center py-4 gap-4 overflow-hidden bg-slate-950/50">
-         <div className="p-3 rounded-xl bg-slate-900 text-neon-cyan mb-2 border border-slate-800 shadow-lg" title="Active Vectors">
+         <div className="p-3 rounded-xl bg-slate-900 text-neon-cyan mb-2 border border-slate-800 shadow-lg shrink-0" title="Active Vectors">
             <Hexagon size={20} />
          </div>
          
-         <div className="flex-1 w-full flex flex-col items-center gap-4 overflow-y-auto scrollbar-hide py-2">
+         <div 
+            className="flex-1 w-full flex flex-col items-center gap-4 overflow-y-auto overflow-x-hidden py-2 no-scrollbar"
+            style={hideScrollbarStyle}
+         >
+            {/* Inject CSS to hide webkit scrollbar locally */}
+            <style>{`
+              .no-scrollbar::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
+
             {vectors.map(v => (
-                <div key={v.id} className="relative group">
+                <div key={v.id} className="relative group shrink-0">
                     <motion.div
                         layoutId={`vector-icon-${v.id}`}
                         className={`relative w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-300 ${
@@ -38,21 +55,32 @@ const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collap
                     >
                         <div className={`w-2.5 h-2.5 rounded-full ${v.color.replace('text-', 'bg-')}`} />
                         
-                        {/* Ping Effect */}
+                        {/* Ping Effect - Contained */}
                         {isProcessing && v.active && (
                              <span className={`absolute inline-flex h-full w-full rounded-xl opacity-75 animate-ping ${v.color.replace('text-', 'bg-')}`}></span>
                         )}
                     </motion.div>
                     
-                    {/* Tooltip */}
-                    <div className="absolute left-14 top-1/2 -translate-y-1/2 bg-slate-900 border border-slate-700 px-2 py-1 rounded text-[10px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                    {/* Tooltip - Fixed Position/Z-Index to prevent clipping */}
+                    <div className="absolute left-12 top-1/2 -translate-y-1/2 bg-slate-900 border border-slate-700 px-2 py-1 rounded text-[10px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100] shadow-xl">
                         {v.name}
                     </div>
                 </div>
             ))}
          </div>
 
-         <div className="mt-auto text-slate-700 hover:text-slate-500 transition-colors cursor-help p-2" title="Kernel Active">
+         {/* Docs Button for Collapsed View */}
+         {onOpenDocs && (
+             <button 
+                onClick={onOpenDocs}
+                className="p-2 text-slate-600 hover:text-neon-cyan transition-colors rounded-lg hover:bg-slate-900/50 shrink-0 mb-2" 
+                title="Open Archives"
+             >
+                 <HelpCircle size={18} />
+             </button>
+         )}
+
+         <div className="mt-auto text-slate-700 p-2 shrink-0" title="Kernel Active">
              <Cpu size={18} />
          </div>
       </div>
@@ -62,17 +90,28 @@ const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collap
   // --- EXPANDED VIEW (FULL MONITOR) ---
   return (
     <div className="h-full w-full p-4 flex flex-col gap-4 overflow-hidden">
-      <div className="flex items-center gap-3 mb-2 border-b border-slate-800 pb-3 shrink-0">
-        <div className="p-1.5 bg-neon-cyan/10 rounded-lg">
-             <Hexagon className="w-4 h-4 text-neon-cyan" />
+      <div className="flex items-center gap-3 mb-2 border-b border-slate-800 pb-3 shrink-0 justify-between">
+        <div className="flex items-center gap-3">
+             <div className="p-1.5 bg-neon-cyan/10 rounded-lg">
+                <Hexagon className="w-4 h-4 text-neon-cyan" />
+            </div>
+            <div>
+                <h2 className="text-xs font-mono text-slate-300 font-bold uppercase tracking-widest whitespace-nowrap">Active Vectors</h2>
+                <p className="text-[10px] text-slate-600 font-mono">NEURAL STATUS: ONLINE</p>
+            </div>
         </div>
-        <div>
-            <h2 className="text-xs font-mono text-slate-300 font-bold uppercase tracking-widest whitespace-nowrap">Active Vectors</h2>
-            <p className="text-[10px] text-slate-600 font-mono">NEURAL STATUS: ONLINE</p>
-        </div>
+        
+        {onOpenDocs && (
+             <button onClick={onOpenDocs} className="text-slate-600 hover:text-neon-cyan transition-colors p-1 hover:bg-slate-800 rounded" title="Vector Documentation">
+                 <HelpCircle size={14} />
+             </button>
+        )}
       </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-800 hover:scrollbar-thumb-slate-700">
+      <div 
+        className="flex-1 space-y-3 overflow-y-auto overflow-x-hidden pr-2 scrollbar-thin scrollbar-thumb-slate-800 hover:scrollbar-thumb-slate-700"
+        style={{ scrollbarGutter: 'stable' }} // Prevents layout shift
+      >
         <AnimatePresence>
         {vectors.map((vector) => {
           const isPulse = isProcessing && vector.active;
@@ -84,7 +123,7 @@ const VectorMonitor: React.FC<VectorMonitorProps> = ({ vectors, vraState, collap
                 vector.active 
                 ? 'border-slate-600 bg-slate-800/90 shadow-xl' 
                 : 'border-slate-800/50 bg-slate-900/40 opacity-70 hover:opacity-100 hover:bg-slate-800/60 hover:border-slate-700'
-              } transition-all cursor-default group`}
+              } transition-all cursor-default group w-full`}
               animate={isPulse ? { borderColor: ['rgba(71,85,105,1)', 'rgba(6,182,212,0.6)', 'rgba(71,85,105,1)'] } : {}}
               transition={{ duration: 1.5, repeat: Infinity }}
             >

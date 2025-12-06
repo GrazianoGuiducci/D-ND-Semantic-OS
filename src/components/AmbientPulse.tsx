@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
-import { Message } from '../types';
+import { Message } from '../systemTypes';
 
 interface AmbientPulseProps {
   history: Message[];
